@@ -8,7 +8,7 @@ my $SocketCache = {};
 
 sub _socket {
     my $args = shift;
-    $SocketCache->{"$args->{host};$args->{port};$$"} ||= IO::Socket::INET->new(
+    IO::Socket::INET->new(
         PeerHost => $args->{host},
         PeerPort => $args->{port},
         Proto    => "tcp",
@@ -19,11 +19,18 @@ sub _socket {
 sub get {
     my $args = $_[0];
     my $soc = _socket($args);
-    print $soc "GET $args->{path} HTTP/1.0\n\n";
+    my $NL = "\015\012";
+    print $soc join(
+        $NL,
+        "GET $args->{path} HTTP/1.0",
+        $args->{body} ? ("Content-Length: " . length($args->{body})) : (),
+        "",
+        $args->{body} ? $args->{body} : ()
+    ) . $NL;
     my ($head, $body, $buf) = ("")x3;
     my $block_size = 4096;
     if (read($soc, $buf, $block_size)) {
-        ($head, $body) = split(/\r?\n\r?\n/, $buf, 2);
+        ($head, $body) = split(/${NL}${NL}/, $buf, 2);
         while (1) {
             my $r = read($soc, $buf, $block_size);
             if ($r) {

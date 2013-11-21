@@ -6,14 +6,22 @@ use Tijk;
 
 use Test::More;
 
-my $res = Tijk::get({
+my %args = (
     host => "localhost",
     port => "9200",
-    path => "/_stats",
-});
+);
 
-my $parsed = JSON::decode_json($res);
+my @tests = (
+    [ path => "/_stats" ],
+    [ path => "/_search", body => q!{"query":{"match_all":{}}}! ],
+);
 
-is ref($parsed), "HASH";
+for (@tests) {
+    my $a = {%args, @$_};
+    my $res = Tijk::get($a);
+    my $parsed = JSON::decode_json($res);
+    is ref($parsed), "HASH", "$a->{path}\t". substr($res, 0, 60)."...";
+}
+
 
 done_testing;
