@@ -38,23 +38,28 @@ sub pp_fetch {
     }
 }
 
+sub _build_http_message {
+    my $args = $_[0];
+    my $path_and_qs = $args->{path} . ( defined($args->{query_string}) ? ("?".$args->{query_string}) : "" );
+    return join(
+        $CRLF,
+        "$args->{method} $path_and_qs HTTP/1.1",
+        "Host: $args->{host}",
+        $args->{body} ? ("Content-Length: " . length($args->{body})) : (),
+        "",
+        $args->{body} ? $args->{body} : ()
+    ) . $CRLF;
+}
+
 sub request {
     my $args = $_[0];
-
     my $soc = $SocketCache->{"$args->{host};$args->{port};$$"} ||= do {
         my $soc;
         socket($soc, PF_INET, SOCK_STREAM, getprotobyname('tcp')) || die $!;
         connect($soc, sockaddr_in($args->{port}, inet_aton($args->{host}))) || die $!;
         $soc;
     };
-    my $path_and_qs = $args->{path} . ( defined($args->{query_string}) ? ("?".$args->{query_string}) : "" );
-    my $r = join($CRLF,
-                 "$args->{method} $path_and_qs HTTP/1.1",
-                 "Host: $args->{host}",
-                 $args->{body} ? ("Content-Length: " . length($args->{body})) : (),
-                 "",
-                 $args->{body} ? $args->{body} : ()
-        ) . $CRLF;
+    my $r = _build_http_message($args);
     die "send error ($r) $!"
         if syswrite($soc,$r) != length($r);
 
