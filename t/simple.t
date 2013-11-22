@@ -15,6 +15,7 @@ my %args = (
 my @tests = (
     [ path => "/_stats" ],
     [ path => "/_search", body => q!{"query":{"match_all":{}}}! ],
+    [ path => "/_search", query_string => "search_type=count", body => q!{"query":{"match_all":{}}}! ],
 );
 
 for ((@tests) x (300)) {

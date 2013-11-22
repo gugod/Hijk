@@ -47,8 +47,9 @@ sub request {
         connect($soc, sockaddr_in($args->{port}, inet_aton($args->{host}))) || die $!;
         $soc;
     };
+    my $path_and_qs = $args->{path} . ( defined($args->{query_string}) ? ("?".$args->{query_string}) : "" );
     my $r = join($CRLF,
-                 "$args->{method} $args->{path} HTTP/1.1",
+                 "$args->{method} $path_and_qs HTTP/1.1",
                  "Host: $args->{host}",
                  $args->{body} ? ("Content-Length: " . length($args->{body})) : (),
                  "",
