@@ -5,14 +5,15 @@ use warnings;
 use IO::Socket;
 
 my $SocketCache = {};
-
 sub _socket {
     my $args = shift;
-    IO::Socket::INET->new(
+    $SocketCache->{"$args->{host};$args->{port};$$"} ||= IO::Socket::INET->new(
         PeerHost => $args->{host},
         PeerPort => $args->{port},
         Proto    => "tcp",
         Blocking => 1,
+        Type     => SOCK_STREAM,
+        Timeout  => 60,
     );
 }
 
@@ -20,23 +21,22 @@ sub get {
     my $args = $_[0];
     my $soc = _socket($args);
     my $NL = "\015\012";
-    print $soc join(
+    syswrite($soc, join(
         $NL,
-        "GET $args->{path} HTTP/1.0",
+        "GET $args->{path} HTTP/1.1",
+        "Host: $args->{host}",
         $args->{body} ? ("Content-Length: " . length($args->{body})) : (),
         "",
         $args->{body} ? $args->{body} : ()
-    ) . $NL;
+    ) . $NL);
     my ($head, $body, $buf) = ("")x3;
     my $block_size = 4096;
-    if (read($soc, $buf, $block_size)) {
+    if (sysread($soc, $buf, $block_size, 0)) {
         ($head, $body) = split(/${NL}${NL}/, $buf, 2);
-        while (1) {
-            my $r = read($soc, $buf, $block_size);
-            if ($r) {
-                $body .= $buf;
-            }
-            else {
+        my ($content_length) = $head =~ m/^Content-Length: ([0-9]+)$/m;
+        while ( length($body) < $content_length ) {
+            my $r = sysread($soc, $body, $block_size, length($body));
+            unless($r) {
                 last if defined($r);
                 die "Failed to read the full response body.";
             }
