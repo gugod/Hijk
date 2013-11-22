@@ -1,4 +1,4 @@
-package Tijk;
+package Hijk;
 
 use strict;
 use warnings;

@@ -2,7 +2,7 @@
 
 use strict;
 use JSON;
-use Tijk;
+use Hijk;
 
 use Test::More;
 
@@ -18,10 +18,9 @@ my @tests = (
 
 for (@tests) {
     my $a = {%args, @$_};
-    my $res = Tijk::get($a);
+    my $res = Hijk::get($a);
     my $parsed = JSON::decode_json($res);
     is ref($parsed), "HASH", "$a->{path}\t". substr($res, 0, 60)."...";
 }
-
 
 done_testing;
