@@ -1,0 +1,10 @@
+Changes
+Makefile.PL
+MANIFEST
+ppport.h
+README
+XS.xs
+t/Hijk-HTTP-XS.t
+fallback/const-c.inc
+fallback/const-xs.inc
+lib/Hijk/HTTP/XS.pm

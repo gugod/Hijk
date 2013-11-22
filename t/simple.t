@@ -7,7 +7,7 @@ use Hijk;
 use Test::More;
 
 my %args = (
-    host => "localhost",
+    host => $ENV{TEST_HOST} || "localhost",
     port => "9200",
     method => "GET",
 );
