@@ -13,30 +13,29 @@ eval {
 };
 
 my $SocketCache = {};
-
 sub pp_fetch {
     my $fd = shift || die "need file descriptor";
     my ($head, $body,$buf);
-
-    # it will block until receives at least 512 bytes
-    my $block_size = 512;
-    if (POSIX::read($fd, $buf, $block_size)) {
+    my $block_size = 10240;
+    while (1) {
+        my $tmp;
+        my $r = POSIX::read($fd, $tmp, $block_size) || die $!;
+        $buf .= $tmp;
         ($head, $body) = split(/${CRLF}${CRLF}/o, $buf, 2);
-        my ($content_length) = $head =~ m/^Content-Length: ([0-9]+)$/om;
-        my $left = $content_length - length($body);
-        $buf = "";
-        while ($left) {
-            my $r = POSIX::read($fd, $buf, $left);
-            die "Failed to read the full response body. $! (expected $left got $r)"
-                unless $r;
-            $body .= $buf;
-            $left -= $r;
+        if ($body) {
+            my ($content_length) = $head =~ m/^Content-Length: ([0-9]+)$/om;
+            my $left = $content_length - length($body);
+            $buf = "";
+            while ($left) {
+                my $r = POSIX::read($fd, $buf, $left);
+                die "Failed to read the full response body. $! (expected $left got $r)"
+                    unless $r;
+                $body .= $buf;
+                $left -= $r;
+            }
+            return (200, $body);
         }
     }
-    else {
-        die "Failed to read the first block.";
-    }
-    return (200, $body);
 }
 
 sub request {
