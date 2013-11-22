@@ -2,38 +2,33 @@ package Hijk;
 
 use strict;
 use warnings;
-use IO::Socket;
+use Socket qw(PF_INET SOCK_STREAM sockaddr_in inet_aton $CRLF);
 
 my $SocketCache = {};
-sub _socket {
-    my $args = shift;
-    $SocketCache->{"$args->{host};$args->{port};$$"} ||= IO::Socket::INET->new(
-        PeerHost => $args->{host},
-        PeerPort => $args->{port},
-        Proto    => "tcp",
-        Blocking => 1,
-        Type     => SOCK_STREAM,
-        Timeout  => 60,
-    );
-}
 
-sub get {
+sub request {
     my $args = $_[0];
-    my $soc = _socket($args);
-    my $NL = "\015\012";
+
+    my $soc = $SocketCache->{"$args->{host};$args->{port};$$"} ||= do {
+        my $soc;
+        socket($soc, PF_INET, SOCK_STREAM, getprotobyname('tcp'));
+        connect($soc, sockaddr_in($args->{port}, inet_aton($args->{host})));
+        $soc;
+    };
+
     syswrite($soc, join(
-        $NL,
-        "GET $args->{path} HTTP/1.1",
+        $CRLF,
+        "$args->{method} $args->{path} HTTP/1.1",
         "Host: $args->{host}",
         $args->{body} ? ("Content-Length: " . length($args->{body})) : (),
         "",
         $args->{body} ? $args->{body} : ()
-    ) . $NL);
-    my ($head, $body, $buf) = ("")x3;
-    my $block_size = 4096;
+    ) . $CRLF);
+    my ($head, $body, $buf);
+    my $block_size = 10240;
     if (sysread($soc, $buf, $block_size, 0)) {
-        ($head, $body) = split(/${NL}${NL}/, $buf, 2);
-        my ($content_length) = $head =~ m/^Content-Length: ([0-9]+)$/m;
+        ($head, $body) = split(/${CRLF}${CRLF}/o, $buf, 2);
+        my ($content_length) = $head =~ m/^Content-Length: ([0-9]+)$/om;
         while ( length($body) < $content_length ) {
             my $r = sysread($soc, $body, $block_size, length($body));
             unless($r) {

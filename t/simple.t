@@ -1,14 +1,15 @@
 #!/usr/bin/env perl
 
 use strict;
-use JSON;
 use Hijk;
 
+# use JSON;
 use Test::More;
 
 my %args = (
     host => "localhost",
     port => "9200",
+    method => "GET",
 );
 
 my @tests = (
@@ -16,11 +17,17 @@ my @tests = (
     [ path => "/_search", body => q!{"query":{"match_all":{}}}! ],
 );
 
-for (@tests) {
-    my $a = {%args, @$_};
-    my $res = Hijk::get($a);
-    my $parsed = JSON::decode_json($res);
-    is ref($parsed), "HASH", "$a->{path}\t". substr($res, 0, 60)."...";
+for ((@tests) x (300)) {
+    my $a = {%args, @$_ };
+    my $res = Hijk::request($a);
+
+    my $test_name = "$a->{path}\t". substr($res, 0, 60)."...\n";
+    if (substr($res, 0, 1) eq '{' && substr($res, -1, 1) eq '}' ) {
+        pass $test_name;
+    }
+    else {
+        fail $test_name;
+    }
 }
 
 done_testing;
