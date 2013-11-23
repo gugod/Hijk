@@ -11,8 +11,17 @@ INCLUDE: const-xs.inc
 void fetch(int fd)
     PPCODE:
         SV *body = newSVpv("",0);
-        EXTEND(SP,2);
-        struct response resp = { .body = body, .status = 0, .flags = 0 };
+        HV *header = newHV();
+        EXTEND(SP,3);
+        struct response resp = {
+                                   .header = header,
+                                   .body = body,
+                                   .status = 0,
+                                   .flags = 0,
+                                   .current_header = NULL,
+                                   .current_value  = NULL
+                        };
         read_and_store(fd,&resp);
         PUSHs(sv_2mortal(newSViv(resp.status)));
         PUSHs(sv_2mortal(resp.body));
+        PUSHs(newRV_noinc((SV *)resp.header));
