@@ -15,24 +15,28 @@ my @tests = (
     [ path => "/_stats" ],
     [ path => "/_search", body => q!{"query":{"match_all":{}}}! ],
 );
-
+use Data::Dumper;
 
 $args{soc} = soc();
+
 eval {
+    shutdown($args{soc},2);
     close($args{soc});
     my $a = {%args, @tests[0]};
     my $res = request($a);
 };
 like ($@,qr/non-socket/);
 
+
 $args{soc} = soc();
 for my $reset((1,0)) {
     for ((@tests) x (100)) {
         $args{soc} = soc()
-            if $reset;
+            if $reset || !$args{soc};
         my $a = {%args, @$_ };
-        my $res = request($a);
-
+        my ($res,$headers) = request($a);
+        like $headers->{'Content-Type'},qr/application/;
+        like $headers->{'Content-Length'},qr/\d+/;
         my $test_name = "$a->{path}\t". substr($res, 0, 60)."...\n";
         if (substr($res, 0, 1) eq '{' && substr($res, -1, 1) eq '}' ) {
             pass $test_name;
@@ -40,11 +44,13 @@ for my $reset((1,0)) {
         else {
             fail $test_name;
         }
-        close($args{soc})
+
+        shutdown($args{soc},2) and close($args{soc}) and $args{soc} = 0
             if $reset;
     }
 }
-done_testing();
+shutdown($args{soc},2);
+done_testing;
 
 
 # helpers
@@ -57,10 +63,12 @@ sub request {
         "",
         $args->{body} ? $args->{body} : ()
     ) . $CRLF);
-    my ($status,$body) = Hijk::HTTP::XS::fetch(fileno($args{soc}));
+    my ($status,$body,$headers) = Hijk::HTTP::XS::fetch(fileno($args{soc}));
+    print Data::Dumper::Dumper($headers->{'Content-Type'});
     die "$status: $body"
         unless $status == 200;
-    return $body;
+#    print STDERR Data::Dumper::Dumper([$status,$body,$headers]);
+    return ($body,$headers);
 }
 
 sub soc {
