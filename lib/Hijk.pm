@@ -55,12 +55,12 @@ sub pp_fetch {
     return ($status_code, $body);
 }
 
-sub _build_http_message {
+sub build_http_message {
     my $args = $_[0];
     my $path_and_qs = ($args->{path} || "/") . ( defined($args->{query_string}) ? ("?".$args->{query_string}) : "" );
     return join(
         $CRLF,
-        "$args->{method} $path_and_qs HTTP/1.1",
+        ($args->{method} || "GET")." $path_and_qs HTTP/1.1",
         "Host: $args->{host}",
         $args->{body} ? ("Content-Length: " . length($args->{body})) : (),
         "",
@@ -76,7 +76,7 @@ sub request {
         connect($soc, sockaddr_in($args->{port}, inet_aton($args->{host}))) || die $!;
         $soc;
     };
-    my $r = _build_http_message($args);
+    my $r = build_http_message($args);
     die "send error ($r) $!"
         if syswrite($soc,$r) != length($r);
 
