@@ -9,7 +9,8 @@ perl:
   - "5.8"
 
 before_install:
-  - "yes | cpanm --verbose Module::Install Module::Install::CPANfile"
+  - "cpanm --verbose Module::Install Module::Install::CPANfile"
+  - ./dev-bin/travis-prepare.sh
 
 notifications:
   irc:
