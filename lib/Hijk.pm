@@ -103,6 +103,7 @@ Hijk - Specialized HTTP client
 
     my $res = Hijk::request({
         host => "example.com",
+        port => "80",
         path => "/flower",
         query_string => "color=red"
     });
@@ -121,6 +122,78 @@ rather then web servers.
 Most of HTTP features like proxy, redirect, Transfer-Encoding, or SSL are not
 supported at all. For those requirements we already have many good HTTP clients
 like L<HTTP::Tiny>, L<Furl> or L<LWP::UserAgent>.
+
+=head1 FUNCTIONS
+
+=over 4
+
+=item Hijk::request( $args :HashRef ) :HashRef
+
+This is the only function to be used. It is not exported to its caller namespace
+at all. It takes a request arguments in HashRef and returns the response in HashRef.
+
+The C<$args> request arg should contain key-value pairs from the following
+table. The value for C<host> and C<port> are mandatory and others are optional
+with default values listed below
+
+=over 4
+
+=item host => ...
+
+=item port => ...
+
+=item method => "GET"
+
+=item path => "/"
+
+=item query_string => ""
+
+=item body => ""
+
+=back
+
+Too keep the implementation straight-forward, Hijk does not take full URL string
+as input.
+
+The return vaue is a HashRef representing a response. It contains the following
+key-value pairs.
+
+=over 4
+
+=item status => :StatusCode
+
+=item body => :Str
+
+=back
+
+For example, to send request to C<http://example.com/flower?color=red>, use the
+following code:
+
+    my $res = Hijk::request({
+        host => "example.com",
+        port => "80",
+        path => "/flower",
+        query_string => "color=red"
+    });
+    die "Response is not OK" unless $res->{status} ne "200";
+
+Notice that you do not need to put the leading C<"?"> character in the
+C<query_string>. You do, however, need to propery C<uri_escape> the content of
+C<query_string>.
+
+All values are assumed to be valid. Hijk simply passthru the values without
+validating the content. It is possible that it constructs invalid HTTP Messages.
+Users should keep this in mind when using Hijk.
+
+=head1 AUTHORS
+
+=over 4
+
+=item Kang-min Liu <gugod@gugod.org>
+
+=item Borislav Nikolov
+
+=back
 
 =head1 COPYRIGHT
 
