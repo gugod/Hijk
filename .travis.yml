@@ -9,7 +9,7 @@ perl:
   - "5.8"
 
 before_install:
-  - "cpanm Module::Install Module::Install::CPANfile"
+  - "yes | cpanm --verbose Module::Install Module::Install::CPANfile"
 
 notifications:
   irc:
