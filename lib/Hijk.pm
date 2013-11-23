@@ -57,7 +57,7 @@ sub pp_fetch {
 
 sub _build_http_message {
     my $args = $_[0];
-    my $path_and_qs = $args->{path} . ( defined($args->{query_string}) ? ("?".$args->{query_string}) : "" );
+    my $path_and_qs = ($args->{path} || "/") . ( defined($args->{query_string}) ? ("?".$args->{query_string}) : "" );
     return join(
         $CRLF,
         "$args->{method} $path_and_qs HTTP/1.1",
