@@ -1,8 +1,9 @@
 package Hijk;
-use POSIX;
 use strict;
 use warnings;
+use POSIX;
 use Socket qw(PF_INET SOCK_STREAM sockaddr_in inet_aton $CRLF);
+our $VERSION = "0.01";
 
 eval {
     require Hijk::HTTP::XS;
@@ -13,6 +14,7 @@ eval {
 };
 
 my $SocketCache = {};
+
 sub pp_fetch {
     my $fd = shift || die "need file descriptor";
     my ($head,$neck,$body,$buf) = ("", "${CRLF}${CRLF}");
@@ -88,3 +90,67 @@ sub request {
 }
 
 1;
+
+__END__
+
+=encoding utf8
+
+=head1 NAME
+
+Hijk - Specialized HTTP client
+
+=head1 SYNOPSIS
+
+    my $res = Hijk::request({
+        host => "example.com",
+        path => "/flower",
+        query_string => "color=red"
+    });
+
+    die unless ($res->{status} == "200"); {
+
+    say $res->{body};
+
+=head1 DESCRIPTION
+
+Hijk is a specialized HTTP Client that does nothing but transporting the
+response body back. It does not feature as a "user agent", but as a dumb
+client. It is suitble for connecting to data servers transporting via HTTP
+rather then web servers.
+
+Most of HTTP features like proxy, redirect, Transfer-Encoding, or SSL are not
+supported at all. For those requirements we already have many good HTTP clients
+like L<HTTP::Tiny>, L<Furl> or L<LWP::UserAgent>.
+
+=head1 COPYRIGHT
+
+Copyright (c) 2013 Kang-min Liu C<< <gugod@gugod.org> >>.
+
+=head1 LICENCE
+
+The MIT License
+
+=head1 DISCLAIMER OF WARRANTY
+
+BECAUSE THIS SOFTWARE IS LICENSED FREE OF CHARGE, THERE IS NO WARRANTY
+FOR THE SOFTWARE, TO THE EXTENT PERMITTED BY APPLICABLE LAW. EXCEPT WHEN
+OTHERWISE STATED IN WRITING THE COPYRIGHT HOLDERS AND/OR OTHER PARTIES
+PROVIDE THE SOFTWARE "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER
+EXPRESSED OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE
+ENTIRE RISK AS TO THE QUALITY AND PERFORMANCE OF THE SOFTWARE IS WITH
+YOU. SHOULD THE SOFTWARE PROVE DEFECTIVE, YOU ASSUME THE COST OF ALL
+NECESSARY SERVICING, REPAIR, OR CORRECTION.
+
+IN NO EVENT UNLESS REQUIRED BY APPLICABLE LAW OR AGREED TO IN WRITING
+WILL ANY COPYRIGHT HOLDER, OR ANY OTHER PARTY WHO MAY MODIFY AND/OR
+REDISTRIBUTE THE SOFTWARE AS PERMITTED BY THE ABOVE LICENCE, BE
+LIABLE TO YOU FOR DAMAGES, INCLUDING ANY GENERAL, SPECIAL, INCIDENTAL,
+OR CONSEQUENTIAL DAMAGES ARISING OUT OF THE USE OR INABILITY TO USE
+THE SOFTWARE (INCLUDING BUT NOT LIMITED TO LOSS OF DATA OR DATA BEING
+RENDERED INACCURATE OR LOSSES SUSTAINED BY YOU OR THIRD PARTIES OR A
+FAILURE OF THE SOFTWARE TO OPERATE WITH ANY OTHER SOFTWARE), EVEN IF
+SUCH HOLDER OR OTHER PARTY HAS BEEN ADVISED OF THE POSSIBILITY OF
+SUCH DAMAGES.
+
+=cut
