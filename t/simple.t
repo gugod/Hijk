@@ -2,9 +2,11 @@
 
 use strict;
 use Hijk;
-
-# use JSON;
 use Test::More;
+
+unless ($ENV{TEST_LIVE}) {
+    plan skip_all => "Enable live testing by setting env: TEST_LIVE=1";
+}
 
 my %args = (
     host => $ENV{TEST_HOST} || "localhost",
