@@ -1,0 +1,11 @@
+MANIFEST
+META.yml
+MYMETA.yml
+MYMETA.json
+Makefile
+Makefile.old
+inc
+*~
+pm_to_blib
+blib
+cover_db

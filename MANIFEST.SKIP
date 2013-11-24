@@ -6,7 +6,10 @@
 ^\.git/
 ^\.#
 ^MYMETA\.(json|yml)$
-\Makefile(.(bak|old))?$
-^MANIFEST\.bak$
+^Makefile(.(bak|old))?$
+^MANIFEST\.(bak|SKIP)$
 \.tar\.gz$
 ^pm_to_blib$
+^.shipit$
+^.gitignore$
+
