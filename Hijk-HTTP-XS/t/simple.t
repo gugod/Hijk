@@ -25,7 +25,7 @@ eval {
     my $a = {%args, @tests[0]};
     my $res = request($a);
 };
-like ($@,qr/non-socket/);
+like ($@,qr/Bad file/);
 
 
 $args{soc} = soc();
@@ -62,9 +62,8 @@ sub request {
         $args->{body} ? ("Content-Length: " . length($args->{body})) : (),
         "",
         $args->{body} ? $args->{body} : ()
-    ) . $CRLF);
+    ) . $CRLF) || die $!;
     my ($status,$body,$headers) = Hijk::HTTP::XS::fetch(fileno($args{soc}));
-    print Data::Dumper::Dumper($headers->{'Content-Type'});
     die "$status: $body"
         unless $status == 200;
 #    print STDERR Data::Dumper::Dumper([$status,$body,$headers]);

@@ -39,7 +39,7 @@ static void read_and_store(int fd, struct response *r) {
     parser.data = r;
     for (;;) {
         char buf[BUFSIZ];
-        int rc = recv(fd,buf,BUFSIZ,0);
+        int rc = read(fd,buf,sizeof(buf));
         if (rc <= 0) {
             r->status = 0;
             sv_setpv(r->body,rc == -1 ? strerror(errno) : "connection terminated unexpectedly");
