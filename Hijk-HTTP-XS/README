@@ -1,5 +1,5 @@
 NAME
-    Hijk::HTTP::XS - Simple XS http request parser using
+    Hijk::HTTP::XS - Simple XS http response parser using
     https://github.com/joyent/http-parser
 
 SYNOPSIS
@@ -18,7 +18,7 @@ SYNOPSIS
         print Data::Dumper::Dumper([$status,$body,$headers]);
 
 DESCRIPTION
-  very simple http request parser, does not support gzip/ssl or anything
+  very simple http response parser, does not support gzip/ssl or anything
 EXPORT
     Hijk::HTTP::XS::fetch($fd) returns ($status,$body,$headers)
         the only exported function, parses the http response and returns

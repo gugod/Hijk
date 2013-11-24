@@ -63,7 +63,7 @@ XSLoader::load('Hijk::HTTP::XS', $VERSION);
 __END__
 =head1 NAME
 
-Hijk::HTTP::XS - Simple XS http request parser using https://github.com/joyent/http-parser
+Hijk::HTTP::XS - Simple XS http response parser using https://github.com/joyent/http-parser
 
 =head1 SYNOPSIS
 
@@ -83,7 +83,7 @@ Hijk::HTTP::XS - Simple XS http request parser using https://github.com/joyent/h
 
   
 =head1 DESCRIPTION
-  very simple http request parser, does not support gzip/ssl or anything
+  very simple http response parser, does not support gzip/ssl or anything
 
 =head1 EXPORT
 
