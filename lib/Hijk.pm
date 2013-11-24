@@ -19,7 +19,7 @@ my $SocketCache = {};
 sub pp_fetch {
     my $fd = shift || die "need file descriptor";
     my ($head,$neck,$body,$buf) = ("", "${CRLF}${CRLF}");
-    my ($block_size, $content_length, $decapitated, $status_code) = (10240);
+    my ($block_size, $decapitated, $status_code) = (10240);
     my $header = {};
     do {
         # it blocks until receives at least $block_size
@@ -42,10 +42,9 @@ sub pp_fetch {
                         $header->{$key} = $value;
                     }
 
-                    ($content_length) = $header->{'Content-Length'};
-                    if ($content_length) {
+                    if ($header->{'Content-Length'}) {
                         $body = substr($buf, $neck_pos + length($neck));
-                        $block_size = $content_length - length($body);
+                        $block_size = $header->{'Content-Length'} - length($body);
                     }
                     else {
                         $block_size = 0;
