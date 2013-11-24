@@ -132,9 +132,7 @@ like L<HTTP::Tiny>, L<Furl> or L<LWP::UserAgent>.
 
 =head1 FUNCTIONS
 
-=over 4
-
-=item Hijk::request( $args :HashRef ) :HashRef
+=head2 Hijk::request( $args :HashRef ) :HashRef
 
 This is the only function to be used. It is not exported to its caller namespace
 at all. It takes a request arguments in HashRef and returns the response in HashRef.
@@ -198,7 +196,7 @@ Users should keep this in mind when using Hijk.
 
 =item Kang-min Liu <gugod@gugod.org>
 
-=item Borislav Nikolov
+=item Borislav Nikolov <jack@sofialondonmoskva.com>
 
 =back
 
