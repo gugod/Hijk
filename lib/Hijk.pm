@@ -59,7 +59,7 @@ sub pp_fetch {
         else {
             die "Failed to read http " .( $decapitated ? "body": "head" ). " from socket";
         }
-    } while( !$decapitated || $block_size );
+    } while( !$decapitated || $block_size > 0 );
 
     return ($status_code, $body, $header);
 }
