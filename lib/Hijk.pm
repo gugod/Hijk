@@ -20,7 +20,7 @@ sub pp_fetch {
     my $fd = shift || die "need file descriptor";
     my ($head,$neck,$body,$buf) = ("", "${CRLF}${CRLF}");
     my ($block_size, $content_length, $decapitated, $status_code) = (10240);
-
+    my $header = {};
     do {
         # it blocks until receives at least $block_size
         my $nbytes = POSIX::read($fd, $buf, $block_size);
@@ -35,7 +35,14 @@ sub pp_fetch {
                     $decapitated = 1;
                     $head .= substr($buf, 0, $neck_pos);
                     $status_code = substr($head, 9, 3);
-                    ($content_length) = $head =~ m< ${CRLF} Content-Length:\ ([0-9]+) (?:${CRLF}|\z)  >oxi;
+                    substr($head, 0, index($head, "${CRLF}")+length($CRLF), "");
+
+                    for (split /${CRLF}/o, $head) {
+                        my ($key, $value) = split /: /, $_, 2;
+                        $header->{$key} = $value;
+                    }
+
+                    ($content_length) = $header->{'Content-Length'};
                     if ($content_length) {
                         $body = substr($buf, $neck_pos + length($neck));
                         $block_size = $content_length - length($body);
@@ -55,7 +62,7 @@ sub pp_fetch {
         }
     } while( !$decapitated || $block_size );
 
-    return ($status_code, $body);
+    return ($status_code, $body, $header);
 }
 
 sub build_http_message {
