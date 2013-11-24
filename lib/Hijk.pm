@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use POSIX;
 use Socket qw(PF_INET SOCK_STREAM sockaddr_in inet_aton $CRLF);
-our $VERSION = "0.01";
+our $VERSION = "0.02";
 
 eval {
     require Hijk::HTTP::XS;
