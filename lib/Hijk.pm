@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use POSIX;
 use Socket qw(PF_INET SOCK_STREAM sockaddr_in inet_aton $CRLF);
-our $VERSION = "0.02";
+our $VERSION = "0.03";
 
 eval {
     require Hijk::HTTP::XS;
@@ -94,9 +94,10 @@ sub request {
     die "send error ($r) $!"
         if syswrite($soc,$r) != length($r);
 
-    my ($status,$body) = fetch(fileno($soc));
+    my ($status,$body,$head) = fetch(fileno($soc));
     return {
         status => $status,
+        head => $head,
         body => $body
     };
 }
