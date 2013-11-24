@@ -1,0 +1,12 @@
+^blib
+^Hijk-HTTP-XS/  
+^dev-bin/
+~$
+^\.travis.yml$
+^\.git/
+^\.#
+^MYMETA\.(json|yml)$
+\Makefile(.(bak|old))?$
+^MANIFEST\.bak$
+\.tar\.gz$
+^pm_to_blib$
