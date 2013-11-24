@@ -1,19 +1,31 @@
 #!/usr/bin/env perl
 use strict;
 use warnings;
+use Getopt::Long;
 use Hijk;
 use URI;
 
-my $uri_string = shift or die "$0 <url>";
+my ($method, $output_file, $header, $body) = ("GET", "-", "");
+GetOptions(
+    "method|X=s" => \$method,
+    "H=s",       => \$header,
+    'd=s',       => \$body,
+    "output|o=s" => \$output_file
+);
+$method = uc($method);
+
+my $uri_string = shift(@ARGV) or die "$0 <url>";
 
 my $uri = URI->new($uri_string);
 
 my $res = Hijk::request {
-    method => "GET",
+    method => $method,
     host => $uri->host,
     port => $uri->port || 80,
     path => $uri->path,
     query_string => $uri->query,
+    $header ? ( head => [split /: /, $header, 2] ) : (),
+    $body   ? ( body => $body                    ) : (),
 };
 
 print $res->{body};
