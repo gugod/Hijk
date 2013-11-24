@@ -1,40 +1,65 @@
-Hijk-HTTP-XS version 0.01
-=========================
+NAME
+    Hijk::HTTP::XS - Simple XS http request parser using
+    https://github.com/joyent/http-parser
 
-The README is used to introduce the module and provide instructions on
-how to install the module, any machine dependencies it may have (for
-example C compilers and installed libraries) and any other information
-that should be provided before the module is installed.
+SYNOPSIS
+        use strict;
+        use warnings;
+        use Socket qw(PF_INET SOCK_STREAM sockaddr_in inet_aton $CRLF);
+        use Data::Dumper;
+        use Hijk::HTTP::XS qw(fetch);
 
-A README file is required for CPAN modules since CPAN extracts the
-README file from a module distribution so that people browsing the
-archive can use it get an idea of the modules uses. It is usually a
-good idea to provide version information here so that people can
-decide whether fixes for the module are worth downloading.
+        my $soc;
+        socket($soc, PF_INET, SOCK_STREAM, getprotobyname('tcp')) || die $!;
+        connect($soc, sockaddr_in(80, inet_aton('google.com')))   || die $!;
+        syswrite($soc,"GET / HTTP1/1.1$CRLF$CRLF")                || die $!;
 
-INSTALLATION
+        my ($status,$body,$headers) = fetch(fileno($soc));
+        print Data::Dumper::Dumper([$status,$body,$headers]);
 
-To install this module type the following:
+DESCRIPTION
+  very simple http request parser, does not support gzip/ssl or anything
+EXPORT
+    Hijk::HTTP::XS::fetch($fd) returns ($status,$body,$headers)
+        the only exported function, parses the http response and returns
+        status_code,request body, headers hashref. Requires file descriptor
+        so you just have to pass fileno($socket) to it
 
-   perl Makefile.PL
-   make
-   make test
-   make install
+INSTALL
+          perl Makefile.PL
+          make
+          make test
+          make install
 
-DEPENDENCIES
+AUTHOR
+    Kang-min Liu <gugod@gugod.org>
+    Borislav Nikolov <jack@sofialondonmoskva.com>
 
-This module requires these other modules and libraries:
+COPYRIGHT
+    Copyright (c) 2013 Borislav Nikolov "<jack@sofialondonmoskva.com>".
 
-  blah blah blah
+LICENCE
+    The MIT License
 
-COPYRIGHT AND LICENCE
+DISCLAIMER OF WARRANTY
+    BECAUSE THIS SOFTWARE IS LICENSED FREE OF CHARGE, THERE IS NO WARRANTY
+    FOR THE SOFTWARE, TO THE EXTENT PERMITTED BY APPLICABLE LAW. EXCEPT WHEN
+    OTHERWISE STATED IN WRITING THE COPYRIGHT HOLDERS AND/OR OTHER PARTIES
+    PROVIDE THE SOFTWARE "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER
+    EXPRESSED OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+    WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE
+    ENTIRE RISK AS TO THE QUALITY AND PERFORMANCE OF THE SOFTWARE IS WITH
+    YOU. SHOULD THE SOFTWARE PROVE DEFECTIVE, YOU ASSUME THE COST OF ALL
+    NECESSARY SERVICING, REPAIR, OR CORRECTION.
 
-Put the correct copyright and licence information here.
-
-Copyright (C) 2013 by A. U. Thor
-
-This library is free software; you can redistribute it and/or modify
-it under the same terms as Perl itself, either Perl version 5.18.1 or,
-at your option, any later version of Perl 5 you may have available.
-
+    IN NO EVENT UNLESS REQUIRED BY APPLICABLE LAW OR AGREED TO IN WRITING
+    WILL ANY COPYRIGHT HOLDER, OR ANY OTHER PARTY WHO MAY MODIFY AND/OR
+    REDISTRIBUTE THE SOFTWARE AS PERMITTED BY THE ABOVE LICENCE, BE LIABLE
+    TO YOU FOR DAMAGES, INCLUDING ANY GENERAL, SPECIAL, INCIDENTAL, OR
+    CONSEQUENTIAL DAMAGES ARISING OUT OF THE USE OR INABILITY TO USE THE
+    SOFTWARE (INCLUDING BUT NOT LIMITED TO LOSS OF DATA OR DATA BEING
+    RENDERED INACCURATE OR LOSSES SUSTAINED BY YOU OR THIRD PARTIES OR A
+    FAILURE OF THE SOFTWARE TO OPERATE WITH ANY OTHER SOFTWARE), EVEN IF
+    SUCH HOLDER OR OTHER PARTY HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH
+    DAMAGES.
 

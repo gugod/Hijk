@@ -18,7 +18,7 @@ our @ISA = qw(Exporter);
 # If you do not need this, moving things directly into @EXPORT or @EXPORT_OK
 # will save memory.
 our %EXPORT_TAGS = ( 'all' => [ qw(
-	
+
 ) ] );
 
 our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
@@ -61,53 +61,92 @@ XSLoader::load('Hijk::HTTP::XS', $VERSION);
 
 1;
 __END__
-# Below is stub documentation for your module. You'd better edit it!
-
 =head1 NAME
 
-Hijk::HTTP::XS - Perl extension for blah blah blah
+Hijk::HTTP::XS - Simple XS http request parser using https://github.com/joyent/http-parser
 
 =head1 SYNOPSIS
 
-  use Hijk::HTTP::XS;
-  blah blah blah
+    use strict;
+    use warnings;
+    use Socket qw(PF_INET SOCK_STREAM sockaddr_in inet_aton $CRLF);
+    use Data::Dumper;
+    use Hijk::HTTP::XS qw(fetch);
 
+    my $soc;
+    socket($soc, PF_INET, SOCK_STREAM, getprotobyname('tcp')) || die $!;
+    connect($soc, sockaddr_in(80, inet_aton('google.com')))   || die $!;
+    syswrite($soc,"GET / HTTP1/1.1$CRLF$CRLF")                || die $!;
+
+    my ($status,$body,$headers) = fetch(fileno($soc));
+    print Data::Dumper::Dumper([$status,$body,$headers]);
+
+  
 =head1 DESCRIPTION
+  very simple http request parser, does not support gzip/ssl or anything
 
-Stub documentation for Hijk::HTTP::XS, created by h2xs. It looks like the
-author of the extension was negligent enough to leave the stub
-unedited.
+=head1 EXPORT
 
-Blah blah blah.
+=over 4
 
-=head2 EXPORT
+=item Hijk::HTTP::XS::fetch($fd) returns ($status,$body,$headers)
 
-None by default.
+the only exported function, parses the http response and returns
+status_code,request body, headers hashref. Requires file descriptor
+so you just have to pass fileno($socket) to it 
 
+=back
 
+=head1 INSTALL
 
-=head1 SEE ALSO
+=over 4
 
-Mention other useful documentation such as the documentation of
-related modules or operating system documentation (such as man pages
-in UNIX), or any relevant external documentation such as RFCs or
-standards.
+  perl Makefile.PL
+  make
+  make test
+  make install
 
-If you have a mailing list set up for your module, mention it here.
-
-If you have a web site set up for your module, mention it here.
+=back
 
 =head1 AUTHOR
 
-A. U. Thor, E<lt>jack@nonetE<gt>
+=over 4
 
-=head1 COPYRIGHT AND LICENSE
+=item Kang-min Liu <gugod@gugod.org>
 
-Copyright (C) 2013 by A. U. Thor
+=item Borislav Nikolov <jack@sofialondonmoskva.com>
 
-This library is free software; you can redistribute it and/or modify
-it under the same terms as Perl itself, either Perl version 5.18.1 or,
-at your option, any later version of Perl 5 you may have available.
+=back
 
+=head1 COPYRIGHT
+
+Copyright (c) 2013 Borislav Nikolov C<< <jack@sofialondonmoskva.com> >>.
+
+=head1 LICENCE
+
+The MIT License
+
+=head1 DISCLAIMER OF WARRANTY
+
+BECAUSE THIS SOFTWARE IS LICENSED FREE OF CHARGE, THERE IS NO WARRANTY
+FOR THE SOFTWARE, TO THE EXTENT PERMITTED BY APPLICABLE LAW. EXCEPT WHEN
+OTHERWISE STATED IN WRITING THE COPYRIGHT HOLDERS AND/OR OTHER PARTIES
+PROVIDE THE SOFTWARE "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER
+EXPRESSED OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE
+ENTIRE RISK AS TO THE QUALITY AND PERFORMANCE OF THE SOFTWARE IS WITH
+YOU. SHOULD THE SOFTWARE PROVE DEFECTIVE, YOU ASSUME THE COST OF ALL
+NECESSARY SERVICING, REPAIR, OR CORRECTION.
+
+IN NO EVENT UNLESS REQUIRED BY APPLICABLE LAW OR AGREED TO IN WRITING
+WILL ANY COPYRIGHT HOLDER, OR ANY OTHER PARTY WHO MAY MODIFY AND/OR
+REDISTRIBUTE THE SOFTWARE AS PERMITTED BY THE ABOVE LICENCE, BE
+LIABLE TO YOU FOR DAMAGES, INCLUDING ANY GENERAL, SPECIAL, INCIDENTAL,
+OR CONSEQUENTIAL DAMAGES ARISING OUT OF THE USE OR INABILITY TO USE
+THE SOFTWARE (INCLUDING BUT NOT LIMITED TO LOSS OF DATA OR DATA BEING
+RENDERED INACCURATE OR LOSSES SUSTAINED BY YOU OR THIRD PARTIES OR A
+FAILURE OF THE SOFTWARE TO OPERATE WITH ANY OTHER SOFTWARE), EVEN IF
+SUCH HOLDER OR OTHER PARTY HAS BEEN ADVISED OF THE POSSIBILITY OF
+SUCH DAMAGES.
 
 =cut
