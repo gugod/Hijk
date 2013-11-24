@@ -72,6 +72,11 @@ sub build_http_message {
         ($args->{method} || "GET")." $path_and_qs HTTP/1.1",
         "Host: $args->{host}",
         $args->{body} ? ("Content-Length: " . length($args->{body})) : (),
+        $args->{head} ? (
+            map {
+                $args->{head}[2*$_] . ": " . $args->{head}[2*$_+1]
+            } 0..$#{$args->{head}}/2
+        ) : (),
         "",
         $args->{body} ? $args->{body} : ()
     ) . $CRLF;
@@ -153,12 +158,29 @@ with default values listed below
 
 =item query_string => ""
 
+=item head => []
+
 =item body => ""
 
 =back
 
 Too keep the implementation straight-forward, Hijk does not take full URL string
 as input.
+
+The value of C<head> is an ArrayRef of key-value pairs instead of HashRef, this way
+the order of headers can be maintained. For example:
+
+    head => [
+        "Content-Type" => "application/json",
+        "X-Requested-With" => "Hijk",
+    ]
+
+... will produce these request headers:
+
+    Content-Type: application/json
+    X-Requested-With: Hijk
+
+Again, there are no extra character-escaping filter within Hijk.
 
 The return vaue is a HashRef representing a response. It contains the following
 key-value pairs.

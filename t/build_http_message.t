@@ -30,4 +30,23 @@ is Hijk::build_http_message({ host => "www.example.com", body => "morning" }),
     "Content-Length: 7\x0d\x0a\x0d\x0a".
     "morning\x0d\x0a";
 
+is Hijk::build_http_message({ host => "www.example.com", head => ["X-Head" => "extra stuff"] }),
+    "GET / HTTP/1.1\x0d\x0a".
+    "Host: www.example.com\x0d\x0a".
+    "X-Head: extra stuff\x0d\x0a\x0d\x0a";
+
+is Hijk::build_http_message({ host => "www.example.com", head => ["X-Head" => "extra stuff", "X-Hat" => "ditto"] }),
+    "GET / HTTP/1.1\x0d\x0a".
+    "Host: www.example.com\x0d\x0a".
+    "X-Head: extra stuff\x0d\x0a".
+    "X-Hat: ditto\x0d\x0a\x0d\x0a";
+
+is Hijk::build_http_message({ host => "www.example.com", head => ["X-Head" => "extra stuff"], body => "OHAI" }),
+    "GET / HTTP/1.1\x0d\x0a".
+    "Host: www.example.com\x0d\x0a".
+    "Content-Length: 4\x0d\x0a".
+    "X-Head: extra stuff\x0d\x0a".
+    "\x0d\x0a".
+    "OHAI\x0d\x0a";
+
 done_testing;
