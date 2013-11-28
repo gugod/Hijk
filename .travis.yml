@@ -8,8 +8,8 @@ perl:
   - "5.10"
   - "5.8"
 env:
-  - TEST_LIVE=1
-  - TEST_PORT=9200
+  - TEST_LIVE=1 TEST_HOST=localhost TEST_PORT=9200
+
 before_install:
   - curl --silent -L http://download.elasticsearch.org/elasticsearch/elasticsearch/elasticsearch-0.90.7.tar.gz | tar -xz
   - ./elasticsearch-0.90.7/bin/elasticsearch
