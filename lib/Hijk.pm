@@ -192,6 +192,8 @@ key-value pairs.
 
 =item body => :Str
 
+=item head => :HashRef
+
 =back
 
 For example, to send request to C<http://example.com/flower?color=red>, use the
@@ -212,6 +214,9 @@ C<query_string>.
 All values are assumed to be valid. Hijk simply passthru the values without
 validating the content. It is possible that it constructs invalid HTTP Messages.
 Users should keep this in mind when using Hijk.
+
+Noticed that the C<head> in the response is a HashRef rather then an ArrayRef.
+This makes it easier to retrieve specific header fields.
 
 =head1 AUTHORS
 
