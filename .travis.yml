@@ -7,9 +7,15 @@ perl:
   - "5.12"
   - "5.10"
   - "5.8"
-
+env:
+  - TEST_LIVE=1
+  - TEST_PORT=9200
 before_install:
-  - ./dev-bin/travis-prepare.sh
+  - curl --silent -L http://download.elasticsearch.org/elasticsearch/elasticsearch/elasticsearch-0.90.7.tar.gz | tar -xz
+  - ./elasticsearch-0.90.7/bin/elasticsearch
+  - sleep 5
+  - yes | perl -MCPAN::FirstTime -e CPAN::FirstTime::init
+  - cpanm --notest --verbose Module::Install Module::Install::CPANfile
 
 notifications:
   irc:
