@@ -15,7 +15,6 @@ before_install:
   - ./elasticsearch-0.90.7/bin/elasticsearch
   - sleep 5
   - yes | perl -MCPAN::FirstTime -e CPAN::FirstTime::init
-  - cat ~/.cpan/CPAN/MyConfig.pm
   - cpanm --notest --verbose Module::Install Module::Install::CPANfile Devel::Cover Devel::Cover::Report::Coveralls
 
 script:
