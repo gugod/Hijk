@@ -7,11 +7,10 @@ use Socket qw(PF_INET SOCK_STREAM sockaddr_in inet_aton $CRLF);
 our $VERSION = "0.03";
 
 eval {
+    local $SIG{__DIE__} = sub { *fetch = \&Hijk::pp_fetch; };
     require Hijk::HTTP::XS;
     *fetch = \&Hijk::HTTP::XS::fetch;
     1;
-} or do {
-    *fetch = \&Hijk::pp_fetch;
 };
 
 my $SocketCache = {};
