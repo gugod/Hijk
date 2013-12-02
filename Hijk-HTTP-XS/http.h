@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/poll.h>
 #include <errno.h>
 #include "http-parser/http_parser.h"
 #define DONE 1
@@ -12,6 +13,7 @@ struct response {
     SV *current_value;
     int status;
     int flags;
+    int timeout_ms;
 };
 
 static int header_complete_cb(http_parser *p);
@@ -33,28 +35,61 @@ static http_parser_settings settings = {
 
 static void read_and_store(int fd, struct response *r) {
     struct http_parser parser;
+    char buf[BUFSIZ];
+    int rc, nparsed, len;
+    struct pollfd pfd[1];
     memset(&parser,0,sizeof(parser));
-    int rc, nparsed;
     http_parser_init(&parser, HTTP_RESPONSE);
     parser.data = r;
+    pfd[0].fd = fd;
+    pfd[0].events = POLLIN|POLLERR|POLLNVAL;
+
+    if (r->timeout_ms == 0)
+        r->timeout_ms = -1;
+#define CAT_ERRNO(err,append)                               \
+do {                                                        \
+    r->status = 0;                                          \
+    sv_setpv(r->body,err == -1 ? strerror(errno) : append); \
+    sv_catpvf(r->body," rc: %d",err);                       \
+} while (0)
+
     for (;;) {
-        char buf[BUFSIZ];
-        int rc = read(fd,buf,sizeof(buf));
-        if (rc <= 0) {
-            r->status = 0;
-            sv_setpv(r->body,rc == -1 ? strerror(errno) : "connection terminated unexpectedly");
-            sv_catpvf(r->body," rc: %d",rc);
+        int rc = poll(pfd,1,r->timeout_ms);
+        if (rc == -1) {
+            CAT_ERRNO(rc,"poll failed");
             break;
-        } else {
-            if ((nparsed = http_parser_execute(&parser,&settings,buf,rc)) != rc) {
-                r->status = 0;
-                sv_setpv(r->body,http_errno_description(parser.http_errno));
+        }
+        if (rc == 0 || (rc == 1 && (pfd[0].revents & POLLNVAL))) {
+            CAT_ERRNO(rc, "recv timed out");
+            break;
+        }
+
+        int len = read(fd,buf,sizeof(buf));
+        if (len == 0) {
+            CAT_ERRNO(len,"connection terminated unexpectedly");
+            break;
+        }
+
+        if (len == -1) {
+            if (errno == EAGAIN || errno == EWOULDBLOCK)
+                continue;
+            else {
+                CAT_ERRNO(len,"read failed");
                 break;
             }
-            if (r->flags & DONE)
-                break;
         }
+
+        if ((nparsed = http_parser_execute(&parser,&settings,buf,len)) != len) {
+            r->status = 0;
+            sv_setpv(r->body,http_errno_description(parser.http_errno));
+            break;
+        }
+
+        if (r->flags & DONE)
+            break;
     }
+
+#undef CAT_ERRNO
     cleanup_mid_header_build(r);
 }
 

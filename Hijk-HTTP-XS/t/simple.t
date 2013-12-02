@@ -17,14 +17,21 @@ my @tests = (
 );
 use Data::Dumper;
 
-$args{soc} = soc();
 
 eval {
+    # hopefully google.com will timeout in 1ms
+    my $res = request({ body => '', soc => soc('google.com',80), path => '/' } ,1);
+};
+like ($@,qr/recv timed out/);
+
+eval {
+    $args{soc} = soc();
     shutdown($args{soc},2);
     close($args{soc});
-    my $a = {%args, @tests[0]};
+    my $a = {%args, @{ @tests[0] }};
     my $res = request($a);
 };
+
 like ($@,qr/Bad file/);
 
 
@@ -55,15 +62,15 @@ done_testing;
 
 # helpers
 sub request {
-    my $args = $_[0];
-    syswrite($args{soc}, join(
+    my ($args,$timeout) = @_;
+    syswrite($args->{soc}, join(
         $CRLF,
         "GET $args->{path} HTTP/1.1",
         $args->{body} ? ("Content-Length: " . length($args->{body})) : (),
         "",
         $args->{body} ? $args->{body} : ()
     ) . $CRLF) || die $!;
-    my ($status,$body,$headers) = Hijk::HTTP::XS::fetch(fileno($args{soc}));
+    my ($status,$body,$headers) = Hijk::HTTP::XS::fetch(fileno($args->{soc}),$timeout);
     die "$status: $body"
         unless $status == 200;
 #    print STDERR Data::Dumper::Dumper([$status,$body,$headers]);
@@ -71,10 +78,14 @@ sub request {
 }
 
 sub soc {
+    my ($host,$port) = @_;
+    $host ||= $ENV{TEST_HOST} || "localhost";
+    $port ||= 9200;
     my $soc;
     socket($soc, PF_INET, SOCK_STREAM, getprotobyname('tcp')) || die $!;
-    connect($soc, sockaddr_in(9200, inet_aton($ENV{TEST_HOST} || "localhost"))) || die $!;
-    $soc;
+    connect($soc, sockaddr_in($port, inet_aton($host))) || die $!;
+
+    return $soc;
 }
 
 

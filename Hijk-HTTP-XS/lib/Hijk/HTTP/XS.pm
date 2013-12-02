@@ -25,6 +25,7 @@ our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 
 our @EXPORT = qw(
   fetch
+  fd_set_blocking
 );
 
 our $VERSION = '0.01';

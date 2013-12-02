@@ -27,7 +27,7 @@ my $fd = do {
     fileno($fh);
 };
 
-my ($status, $body, $head) = Hijk::HTTP::XS::fetch($fd);
+my ($status, $body, $head) = Hijk::HTTP::XS::fetch($fd,-1);
 
 
 is $status, 200;

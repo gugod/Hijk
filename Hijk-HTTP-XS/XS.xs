@@ -4,11 +4,13 @@
 #include "ppport.h"
 #include "const-c.inc"
 #include "http.h"
+#include <fcntl.h>
+
 MODULE = Hijk::HTTP::XS		PACKAGE = Hijk::HTTP::XS		
 
 INCLUDE: const-xs.inc
 
-void fetch(int fd)
+void fetch(int fd,int timeout_ms)
     PPCODE:
         SV *body = newSVpv("",0);
         HV *header = newHV();
@@ -19,9 +21,25 @@ void fetch(int fd)
                                    .status = 0,
                                    .flags = 0,
                                    .current_header = NULL,
-                                   .current_value  = NULL
+                                   .current_value  = NULL,
+                                   .timeout_ms = timeout_ms,
                         };
+
         read_and_store(fd,&resp);
         PUSHs(sv_2mortal(newSViv(resp.status)));
         PUSHs(sv_2mortal(resp.body));
         PUSHs(newRV_noinc((SV *)resp.header));
+
+void fd_set_blocking(int fd, int blocking)
+    CODE:
+        int flags = fcntl(fd, F_GETFL, 0);
+        if (flags == -1)
+            die("failed to F_GETFL");
+
+        if (blocking)
+            flags &= ~O_NONBLOCK;
+        else
+            flags |= O_NONBLOCK;
+
+        if (fcntl(fd, F_SETFL, flags) == -1)
+            die("failed to set blocking/nonblocking mode");
