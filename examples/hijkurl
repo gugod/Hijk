@@ -16,7 +16,7 @@ GetOptions(
 );
 $method = uc($method);
 
-$Hijk::TIMEOUT = $timeout;
+$Hijk::TIMEOUT = $timeout*1000;
 
 my $uri_string = shift(@ARGV) or die "$0 <url>";
 

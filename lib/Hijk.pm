@@ -17,15 +17,19 @@ eval {
 
 sub pp_fetch {
     my $fd = shift || die "need file descriptor";
+    my $timeout_ms = shift || 0;
+
     my ($head,$neck,$body,$buf) = ("", "${CRLF}${CRLF}");
     my ($block_size, $decapitated, $status_code) = (10240);
     my $header = {};
     my ($rout, $rin) = ('', '');
     vec($rin, $fd, 1) = 1;
     do {
-        my ($nfound) = select($rout = $rin, undef, undef, $TIMEOUT);
-        die "select(2) error, errno = $!" if $nfound == -1;
-        die "READ TIMEOUT" unless $nfound == 1;
+        if ($timeout_ms) {
+            my $nfound = select($rout = $rin, undef, undef, $timeout_ms / 1000);
+            die "select(2) error, errno = $!" if $nfound == -1;
+            die "READ TIMEOUT" unless $nfound == 1;
+        }
 
         my $nbytes = POSIX::read($fd, $buf, $block_size);
         unless (defined($nbytes)) {
@@ -98,7 +102,7 @@ sub request {
     die "send error ($r) $!"
         if syswrite($soc,$r) != length($r);
 
-    my ($status,$body,$head) = fetch(fileno($soc));
+    my ($status,$body,$head) = fetch(fileno($soc), $Hijk::TIMEOUT);
     return {
         status => $status,
         head => $head,
