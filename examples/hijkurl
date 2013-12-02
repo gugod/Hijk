@@ -16,8 +16,6 @@ GetOptions(
 );
 $method = uc($method);
 
-$Hijk::TIMEOUT = $timeout*1000;
-
 my $uri_string = shift(@ARGV) or die "$0 <url>";
 
 my $uri = URI->new($uri_string);
@@ -26,6 +24,7 @@ my $res = Hijk::request {
     method => $method,
     host => $uri->host,
     port => $uri->port || 80,
+    timeout => $timeout*1000,
     path => $uri->path,
     query_string => $uri->query,
     $header ? ( head => [split /: /, $header, 2] ) : (),

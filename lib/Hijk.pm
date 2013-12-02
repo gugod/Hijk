@@ -5,7 +5,6 @@ use warnings;
 use POSIX;
 use Socket qw(PF_INET SOCK_STREAM sockaddr_in inet_aton $CRLF);
 our $VERSION = "0.03";
-our $TIMEOUT = 60;
 my $SocketCache = {};
 
 eval {
@@ -102,7 +101,7 @@ sub request {
     die "send error ($r) $!"
         if syswrite($soc,$r) != length($r);
 
-    my ($status,$body,$head) = fetch(fileno($soc), $Hijk::TIMEOUT);
+    my ($status,$body,$head) = fetch(fileno($soc), $args->{timeout});
     return {
         status => $status,
         head => $head,
