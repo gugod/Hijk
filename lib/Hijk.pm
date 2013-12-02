@@ -24,6 +24,7 @@ sub pp_fetch {
     vec($rin, $fd, 1) = 1;
     do {
         my ($nfound) = select($rout = $rin, undef, undef, $TIMEOUT);
+        die "select(2) error, errno = $!" if $nfound == -1;
         die "READ TIMEOUT" unless $nfound == 1;
 
         my $nbytes = POSIX::read($fd, $buf, $block_size);
