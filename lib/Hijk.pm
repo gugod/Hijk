@@ -5,6 +5,8 @@ use warnings;
 use POSIX;
 use Socket qw(PF_INET SOCK_STREAM sockaddr_in inet_aton $CRLF);
 our $VERSION = "0.03";
+our $TIMEOUT = 60;
+my $SocketCache = {};
 
 eval {
     local $SIG{__DIE__} = sub { *fetch = \&Hijk::pp_fetch; };
@@ -13,51 +15,53 @@ eval {
     1;
 };
 
-my $SocketCache = {};
-
 sub pp_fetch {
     my $fd = shift || die "need file descriptor";
     my ($head,$neck,$body,$buf) = ("", "${CRLF}${CRLF}");
     my ($block_size, $decapitated, $status_code) = (10240);
     my $header = {};
+    my ($rout, $rin) = ('', '');
+    vec($rin, $fd, 1) = 1;
     do {
-        # it blocks until receives at least $block_size
+        my ($nfound) = select($rout = $rin, undef, undef, $TIMEOUT);
+        die "READ TIMEOUT" unless $nfound == 1;
+
         my $nbytes = POSIX::read($fd, $buf, $block_size);
-        if (defined($nbytes)) {
-            if ($decapitated) {
-                $body .= $buf;
-                $block_size -= $nbytes;
-            }
-            else {
-                my $neck_pos = index($buf, $neck);
-                if ($neck_pos > 0) {
-                    $decapitated = 1;
-                    $head .= substr($buf, 0, $neck_pos);
-                    $status_code = substr($head, 9, 3);
-                    substr($head, 0, index($head, "${CRLF}")+length($CRLF), "");
-
-                    for (split /${CRLF}/o, $head) {
-                        my ($key, $value) = split /: /, $_, 2;
-                        $header->{$key} = $value;
-                    }
-
-                    if ($header->{'Content-Length'}) {
-                        $body = substr($buf, $neck_pos + length($neck));
-                        $block_size = $header->{'Content-Length'} - length($body);
-                    }
-                    else {
-                        $block_size = 0;
-                        $body = "";
-                    }
-                }
-                else {
-                    $head = $buf;
-                }
-            }
-        }
-        else {
+        unless (defined($nbytes)) {
             die "Failed to read http " .( $decapitated ? "body": "head" ). " from socket";
         }
+
+        if ($decapitated) {
+            $body .= $buf;
+            $block_size -= $nbytes;
+        }
+        else {
+            my $neck_pos = index($buf, $neck);
+            if ($neck_pos > 0) {
+                $decapitated = 1;
+                $head .= substr($buf, 0, $neck_pos);
+                $status_code = substr($head, 9, 3);
+                substr($head, 0, index($head, "${CRLF}")+length($CRLF), "");
+
+                for (split /${CRLF}/o, $head) {
+                    my ($key, $value) = split /: /, $_, 2;
+                    $header->{$key} = $value;
+                }
+
+                if ($header->{'Content-Length'}) {
+                    $body = substr($buf, $neck_pos + length($neck));
+                    $block_size = $header->{'Content-Length'} - length($body);
+                }
+                else {
+                    $block_size = 0;
+                    $body = "";
+                }
+            }
+            else {
+                $head = $buf;
+            }
+        }
+
     } while( !$decapitated || $block_size > 0 );
 
     return ($status_code, $body, $header);

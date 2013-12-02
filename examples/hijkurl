@@ -6,13 +6,17 @@ use Hijk;
 use URI;
 
 my ($method, $output_file, $header, $body) = ("GET", "-", "");
+my $timeout = 60;
 GetOptions(
     "method|X=s" => \$method,
     "H=s",       => \$header,
     'd=s',       => \$body,
-    "output|o=s" => \$output_file
+    "output|o=s" => \$output_file,
+    "timeout=s" => \$timeout,
 );
 $method = uc($method);
+
+$Hijk::TIMEOUT = $timeout;
 
 my $uri_string = shift(@ARGV) or die "$0 <url>";
 
