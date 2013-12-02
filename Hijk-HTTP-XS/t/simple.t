@@ -22,7 +22,7 @@ eval {
     # hopefully google.com will timeout in 1ms
     my $res = request({ body => '', soc => soc('google.com',80), path => '/' } ,1);
 };
-like ($@,qr/recv timed out/);
+like ($@,qr/TIMEOUT/i);
 
 eval {
     $args{soc} = soc();
