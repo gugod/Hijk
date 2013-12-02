@@ -60,7 +60,7 @@ do {                                                        \
             break;
         }
         if (rc == 0 || (rc == 1 && (pfd[0].revents & POLLNVAL))) {
-            CAT_ERRNO(rc, "recv timed out");
+            CAT_ERRNO(rc, "READ TIMEOUT");
             break;
         }
 
