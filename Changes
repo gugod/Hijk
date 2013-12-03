@@ -1,4 +1,4 @@
-0.04:
+0.04: # 2013-12-04T00:06:16+0100
 - Implement 'connect timeout' and 'read timeout'
 
 0.02: # 2013-11-24T16:14:20+0100
