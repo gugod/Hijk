@@ -22,11 +22,10 @@ sub pp_fetch {
     my ($head,$neck,$body,$buf) = ("", "${CRLF}${CRLF}");
     my ($block_size, $decapitated, $status_code) = (10240);
     my $header = {};
-    my ($rout, $rin) = ('', '');
-    vec($rin, $fd, 1) = 1;
+    vec(my $rin = '', $fd, 1) = 1;
     do {
         if ($timeout_ms) {
-            my $nfound = select($rout = $rin, undef, undef, $timeout_ms / 1000);
+            my $nfound = select($rin, undef, undef, $timeout_ms / 1000);
             die "select(2) error, errno = $!" if $nfound == -1;
             die "READ TIMEOUT" unless $nfound == 1;
         }
@@ -103,7 +102,7 @@ sub request {
         connect($soc, $addr) or do {
             if ($! == EINPROGRESS) {
                 vec(my $w = '', fileno($soc), 1) = 1;
-                my $n = select(undef, $w, undef, $args->{timeout}/1000) or  die "CONNECT TIMEOUT";
+                my $n = select(undef, $w, undef, $args->{timeout}) or  die "CONNECT TIMEOUT";
                 die "select(2) error, errno = $!" if $n < 0;
             }
             else {
@@ -119,7 +118,7 @@ sub request {
     die "send error ($r) $!"
         if syswrite($soc,$r) != length($r);
 
-    my ($status,$body,$head) = fetch(fileno($soc), $args->{timeout});
+    my ($status,$body,$head) = fetch(fileno($soc), ($args->{timeout}||0)*1000);
     return {
         status => $status,
         head => $head,
@@ -178,6 +177,8 @@ with default values listed below
 
 =item port => ...
 
+=item timeout => 0
+
 =item method => "GET"
 
 =item path => "/"
@@ -207,6 +208,11 @@ the order of headers can be maintained. For example:
     X-Requested-With: Hijk
 
 Again, there are no extra character-escaping filter within Hijk.
+
+The value of C<timeout> is in seconds, and is used as the time limit for both
+connecting to the host, and reading from the socket. The default value C<0>
+means that there is no timeout limit. If the host is really unreachable, it will
+reach the system TCP timeout limit then dies.
 
 The return vaue is a HashRef representing a response. It contains the following
 key-value pairs.

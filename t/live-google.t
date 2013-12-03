@@ -16,15 +16,15 @@ my %args = (
     method => "GET",
 );
 
-subtest "expect timeout" => sub {
+subtest "with 1ms timeout limit, expect an exception." => sub {
     throws_ok {
-        my $res = Hijk::request({%args, timeout => 1});
+        my $res = Hijk::request({%args, timeout => 0.001});
     } qr/timeout/i;
 };
 
-subtest "do not expect timeout" => sub {
+subtest "with 1s timeout limit, do not expect an exception." => sub {
     lives_ok {
-        my $res = Hijk::request({%args, timeout => 10_000});
+        my $res = Hijk::request({%args, timeout => 10});
     } 'google.com send back something within 10s';
 };
 
