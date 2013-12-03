@@ -32,7 +32,7 @@ sub pp_fetch {
 
         my $nbytes = POSIX::read($fd, $buf, $block_size);
         unless (defined($nbytes)) {
-            die "Failed to read http " .( $decapitated ? "body": "head" ). " from socket";
+            die "Failed to read http " .( $decapitated ? "body": "head" ). " from socket. errno = $!";
         }
 
         if ($decapitated) {
