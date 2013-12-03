@@ -4,6 +4,8 @@ use strict;
 use warnings;
 use POSIX;
 use Socket qw(PF_INET SOCK_STREAM sockaddr_in inet_aton $CRLF);
+use Fcntl qw(F_GETFL F_SETFL O_NONBLOCK);
+use Errno qw(EINPROGRESS);
 our $VERSION = "0.03";
 my $SocketCache = {};
 
@@ -93,8 +95,25 @@ sub request {
     my $args = $_[0];
     my $soc = $SocketCache->{"$args->{host};$args->{port};$$"} ||= do {
         my $soc;
+        my $addr = sockaddr_in($args->{port}, inet_aton($args->{host}));
         socket($soc, PF_INET, SOCK_STREAM, getprotobyname('tcp')) || die $!;
-        connect($soc, sockaddr_in($args->{port}, inet_aton($args->{host}))) || die $!;
+        my $flags = fcntl($soc, F_GETFL, 0) or die $!;
+        if ($args->{timeout}) {
+            fcntl($soc, F_SETFL, $flags | O_NONBLOCK) or die $!;
+        }
+        connect($soc, $addr) or do {
+            if ($! == EINPROGRESS) {
+                vec(my $w = '', fileno($soc), 1) = 1;
+                my $n = select(undef, $w, undef, $args->{timeout}/1000) or  die "CONNECT TIMEOUT";
+                die "select(2) error, errno = $!" if $n < 0;
+            }
+            else {
+                die "connect(2) error, errno = $!";
+            }
+        };
+        if ($args->{timeout}) {
+            fcntl($soc, F_SETFL, $flags) or die $!;
+        }
         $soc;
     };
     my $r = build_http_message($args);
