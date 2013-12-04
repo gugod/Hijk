@@ -4,7 +4,7 @@ use warnings;
 use POSIX qw(EINPROGRESS);
 use Socket qw(PF_INET SOCK_STREAM sockaddr_in inet_aton $CRLF);
 use Fcntl qw(F_GETFL F_SETFL O_NONBLOCK);
-our $VERSION = "0.04";
+our $VERSION = "0.05";
 my $SocketCache = {};
 
 eval {

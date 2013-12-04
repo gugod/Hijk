@@ -1,3 +1,6 @@
+0.05: # 2013-12-04T22:33:31+0100
+- Properly invalidate connection cache when seeing 'Connection: close' in the response.
+
 0.04: # 2013-12-04T00:06:16+0100
 - Implement 'connect timeout' and 'read timeout'
 
