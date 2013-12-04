@@ -119,6 +119,9 @@ sub request {
         if syswrite($soc,$r) != length($r);
 
     my ($status,$body,$head) = fetch(fileno($soc), ($args->{timeout}||0)*1000);
+    if ($head->{Connection} && $head->{Connection} eq 'close') {
+        shutdown(delete $SocketCache->{"$args->{host};$args->{port};$$"}, 2); # or die "shutdown(2) error, errno = $!";
+    }
     return {
         status => $status,
         head => $head,
