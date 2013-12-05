@@ -7,13 +7,6 @@ use Fcntl qw(F_GETFL F_SETFL O_NONBLOCK);
 our $VERSION = "0.05";
 my $SocketCache = {};
 
-eval {
-    local $SIG{__DIE__} = sub { *fetch = \&Hijk::pp_fetch; };
-    require Hijk::HTTP::XS;
-    *fetch = \&Hijk::HTTP::XS::fetch;
-    1;
-};
-
 sub pp_fetch {
     my $fd = shift || die "need file descriptor";
     my ($timeout,$block_size,$header,$head,$body,$buf,$decapitated,$status_code,$nfound,$nbytes) = (shift,10240,{},"");
@@ -114,7 +107,11 @@ sub request {
     die "send error ($r) $!"
         if syswrite($soc,$r) != length($r);
 
-    my ($status,$body,$head) = fetch(fileno($soc), $args->{timeout} && ($args->{timeout}*1000));
+    # Maybe instead we should just allow you to pass in
+    # "fetch => \&Hijk::HTTP::XS::fetch".
+    my $fetch = $args->{fetch} || \&Hijk::pp_fetch;
+    my ($status,$body,$head) = $fetch->(fileno($soc), $args->{timeout} && ($args->{timeout}*1000));
+
     if ($head->{Connection} && $head->{Connection} eq 'close') {
         shutdown(delete $SocketCache->{"$args->{host};$args->{port};$$"}, 2); # or die "shutdown(2) error, errno = $!";
     }
@@ -187,6 +184,12 @@ with default values listed below
 =item head => []
 
 =item body => ""
+
+=item fetch => ...
+
+An optional subroutine reference we'll use to do to the fetching. Load
+L<Hijk::HTTP::XS> and set it to C<\&Hijk::HTTP::XS::fetch> to use an
+XS fetcher.
 
 =back
 
