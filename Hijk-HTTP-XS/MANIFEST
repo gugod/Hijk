@@ -1,8 +1,4 @@
 Changes
-const-c.inc
-const-xs.inc
-fallback/const-c.inc
-fallback/const-xs.inc
 http-parser/.mailmap
 http-parser/.travis.yml
 http-parser/AUTHORS

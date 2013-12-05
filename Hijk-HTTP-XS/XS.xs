@@ -2,13 +2,10 @@
 #include "perl.h"
 #include "XSUB.h"
 #include "ppport.h"
-#include "const-c.inc"
 #include "http.h"
 #include <fcntl.h>
 
 MODULE = Hijk::HTTP::XS		PACKAGE = Hijk::HTTP::XS		
-
-INCLUDE: const-xs.inc
 
 void fetch(int fd,int timeout_ms)
     PPCODE:
