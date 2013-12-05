@@ -141,7 +141,7 @@ Hijk - Specialized HTTP client
         query_string => "color=red"
     });
 
-    die unless ($res->{status} == "200"); {
+    die unless ($res->{status} == "200");
 
     say $res->{body};
 
