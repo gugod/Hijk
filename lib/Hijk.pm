@@ -134,16 +134,38 @@ Hijk - Specialized HTTP client
 
 =head1 SYNOPSIS
 
+A simple GET request:
+
+    use Hijk;
     my $res = Hijk::request({
-        host => "example.com",
-        port => "80",
-        path => "/flower",
+        method       => "GET",
+        host         => "example.com",
+        port         => "80",
+        path         => "/flower",
         query_string => "color=red"
     });
 
     die unless ($res->{status} == "200");
 
     say $res->{body};
+
+A POST request, you have to manually set the appropriate headers, URI
+escape your values etc.
+
+    use Hijk;
+    use URI::Escape qw(uri_escape);
+
+    my $res = Hijk::request({
+        method       => "POST",
+        host         => "example.com",
+        port         => "80",
+        path         => "/new",
+        head         => [ "Content-Type" => "application/x-www-form-urlencoded" ],
+        query_string => "type=flower&bucket=the%20one%20out%20back",
+        body         => "description=" . uri_escape("Another flower, let's hope it's exciting"),
+    });
+
+    die unless ($res->{status} == "200");
 
 =head1 DESCRIPTION
 
