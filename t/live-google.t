@@ -11,7 +11,7 @@ unless ($ENV{TEST_LIVE}) {
 }
 
 my %args = (
-    (exists $ENV{HIJK_XS} ? (fetch => do { require Hijk::HTTP::XS; \&Hijk::HTTP::XS::fetch; }) : ()),
+    ($ENV{HIJK_XS} ? (fetch => do { require Hijk::HTTP::XS; \&Hijk::HTTP::XS::fetch; }) : ()),
     host => "google.com",
     port => "80",
     method => "GET",

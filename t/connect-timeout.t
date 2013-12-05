@@ -25,7 +25,7 @@ pass "ip generated = $ip";
 
 throws_ok {
     my $res = Hijk::request({
-        (exists $ENV{HIJK_XS} ? (fetch => do { require Hijk::HTTP::XS; \&Hijk::HTTP::XS::fetch; }) : ()),
+        ($ENV{HIJK_XS} ? (fetch => do { require Hijk::HTTP::XS; \&Hijk::HTTP::XS::fetch; }) : ()),
         host => $ip,
         port => 80,
         timeout => 1            # seconds

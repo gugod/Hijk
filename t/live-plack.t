@@ -27,7 +27,7 @@ if ($pid == 0) {
 sleep 5; # hopfully this is enough to launch that psgi.
 
 my %args = (
-    (exists $ENV{HIJK_XS} ? (fetch => do { require Hijk::HTTP::XS; \&Hijk::HTTP::XS::fetch; }) : ()),
+    ($ENV{HIJK_XS} ? (fetch => do { require Hijk::HTTP::XS; \&Hijk::HTTP::XS::fetch; }) : ()),
     host => "localhost",
     port => "5001",
     query_string => "t=5",
