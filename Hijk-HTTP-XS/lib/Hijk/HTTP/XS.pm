@@ -3,65 +3,15 @@ package Hijk::HTTP::XS;
 use v5.14.2;
 use strict;
 use warnings;
-use Carp;
-
-require Exporter;
-use AutoLoader;
-
-our @ISA = qw(Exporter);
-
-# Items to export into callers namespace by default. Note: do not export
-# names by default without a very good reason. Use EXPORT_OK instead.
-# Do not simply export all your public functions/methods/constants.
-
-# This allows declaration	use Hijk::HTTP::XS ':all';
-# If you do not need this, moving things directly into @EXPORT or @EXPORT_OK
-# will save memory.
-our %EXPORT_TAGS = ( 'all' => [ qw(
-
-) ] );
-
-our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
-
-our @EXPORT = qw(
-  fetch
-  fd_set_blocking
-);
 
 our $VERSION = '0.01';
-
-sub AUTOLOAD {
-    # This AUTOLOAD is used to 'autoload' constants from the constant()
-    # XS function.
-
-    my $constname;
-    our $AUTOLOAD;
-    ($constname = $AUTOLOAD) =~ s/.*:://;
-    croak "&Hijk::HTTP::XS::constant not defined" if $constname eq 'constant';
-    my ($error, $val) = constant($constname);
-    if ($error) { croak $error; }
-    {
-	no strict 'refs';
-	# Fixed between 5.005_53 and 5.005_61
-#XXX	if ($] >= 5.00561) {
-#XXX	    *$AUTOLOAD = sub () { $val };
-#XXX	}
-#XXX	else {
-	    *$AUTOLOAD = sub { $val };
-#XXX	}
-    }
-    goto &$AUTOLOAD;
-}
 
 require XSLoader;
 XSLoader::load('Hijk::HTTP::XS', $VERSION);
 
-# Preloaded methods go here.
-
-# Autoload methods go after =cut, and are processed by the autosplit program.
-
 1;
 __END__
+
 =head1 NAME
 
 Hijk::HTTP::XS - Simple XS http response parser using https://github.com/joyent/http-parser
@@ -72,42 +22,31 @@ Hijk::HTTP::XS - Simple XS http response parser using https://github.com/joyent/
     use warnings;
     use Socket qw(PF_INET SOCK_STREAM sockaddr_in inet_aton $CRLF);
     use Data::Dumper;
-    use Hijk::HTTP::XS qw(fetch);
+    use Hijk::HTTP::XS;
 
     my $soc;
     socket($soc, PF_INET, SOCK_STREAM, getprotobyname('tcp')) || die $!;
     connect($soc, sockaddr_in(80, inet_aton('google.com')))   || die $!;
     syswrite($soc,"GET / HTTP1/1.1$CRLF$CRLF")                || die $!;
 
-    my ($status,$body,$headers) = fetch(fileno($soc));
+    my ($status,$body,$headers) = Hijk::HTTP::XS::fetch(fileno($soc));
     print Data::Dumper::Dumper([$status,$body,$headers]);
 
-  
 =head1 DESCRIPTION
-  very simple http response parser, does not support gzip/ssl or anything
 
-=head1 EXPORT
+This is a very simple HTTP fetcher, it does not support fancy things
+like gzip, ssl etc.
+anything
 
-=over 4
+=head1 FUNCTIONS
 
-=item Hijk::HTTP::XS::fetch($fd) returns ($status,$body,$headers)
+=head2 fetch
 
-the only exported function, parses the http response and returns
-status_code,request body, headers hashref. Requires file descriptor
-so you just have to pass fileno($socket) to it 
+    Hijk::HTTP::XS::fetch($fd) returns ($status,$body,$headers)
 
-=back
-
-=head1 INSTALL
-
-=over 4
-
-  perl Makefile.PL
-  make
-  make test
-  make install
-
-=back
+Parses the http response and returns status_code,request body, headers
+hashref. Requires file descriptor so you just have to pass
+fileno($socket) to it
 
 =head1 AUTHOR
 
