@@ -29,7 +29,7 @@ eval {
     $args{soc} = soc();
     shutdown($args{soc},2);
     close($args{soc});
-    my $a = {%args, @{ @tests[0] }};
+    my $a = {%args, @{ $tests[0] }};
     my $res = request($a);
 };
 
