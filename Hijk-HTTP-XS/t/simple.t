@@ -5,6 +5,7 @@ use Hijk::HTTP::XS;
 
 # use JSON;
 use Test::More;
+plan skip_all => "Set NETWORK_TESTS=1 to do network tests" unless $ENV{NETWORK_TESTS};
 use Socket qw(PF_INET SOCK_STREAM sockaddr_in inet_aton $CRLF);
 
 my %args = (
