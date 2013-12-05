@@ -248,6 +248,10 @@ Users should keep this in mind when using Hijk.
 Noticed that the C<head> in the response is a HashRef rather then an ArrayRef.
 This makes it easier to retrieve specific header fields.
 
+We currently don't support returning a body without a Content-Length
+header, bodies B<MUST> have an accompanying Content-Length or we won't
+pick them up.
+
 =head1 AUTHORS
 
 =over 4
