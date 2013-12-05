@@ -19,7 +19,6 @@ lib/Hijk/HTTP/XS.pm
 Makefile.PL
 MANIFEST
 ppport.h
-README
 t/Hijk-HTTP-XS.t
 t/parse-http-message.t
 t/simple.t
