@@ -9,7 +9,8 @@ my $SocketCache = {};
 
 sub pp_fetch {
     my $fd = shift || die "need file descriptor";
-    my ($timeout,$block_size,$header,$head,$body,$buf,$decapitated,$status_code,$nfound,$nbytes) = (shift,10240,{},"");
+    my ($timeout,$block_size,$header,$head,$body,$buf,$decapitated,$nfound,$nbytes) = (shift,10240,{},"");
+    my $status_code = 0;
     $timeout /= 1000 if defined $timeout;
     vec(my $rin = '', $fd, 1) = 1;
     do {
@@ -112,7 +113,7 @@ sub request {
     my $fetch = $args->{fetch} || \&Hijk::pp_fetch;
     my ($status,$body,$head) = $fetch->(fileno($soc), $args->{timeout} && ($args->{timeout}*1000));
 
-    if ($head->{Connection} && $head->{Connection} eq 'close') {
+    if ($status == 0 || ($head->{Connection} && $head->{Connection} eq 'close')) {
         shutdown(delete $SocketCache->{"$args->{host};$args->{port};$$"}, 2); # or die "shutdown(2) error, errno = $!";
     }
     return {
