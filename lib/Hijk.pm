@@ -105,8 +105,9 @@ sub request {
         $soc;
     };
     my $r = build_http_message($args);
+    my $rc = syswrite($soc,$r);
     die "send error ($r) $!"
-        if syswrite($soc,$r) != length($r);
+        if !$rc || $rc != length($r);
 
     # Maybe instead we should just allow you to pass in
     # "fetch => \&Hijk::HTTP::XS::fetch".
