@@ -46,6 +46,7 @@ static void read_and_store(int fd, struct response *r) {
 
     if (r->timeout_ms == 0)
         r->timeout_ms = -1;
+
 #define CAT_ERRNO(err,append)                               \
 do {                                                        \
     r->status = 0;                                          \
@@ -55,26 +56,23 @@ do {                                                        \
 
     for (;;) {
         int rc = poll(pfd,1,r->timeout_ms);
+
         if (rc == -1) {
-            CAT_ERRNO(rc,"poll failed");
+            CAT_ERRNO(rc,"POLL FAILED");
             break;
         }
+
         if (rc == 0 || (rc == 1 && (pfd[0].revents & POLLNVAL))) {
             CAT_ERRNO(rc, "READ TIMEOUT");
             break;
         }
 
         int len = read(fd,buf,sizeof(buf));
-        if (len == 0) {
-            CAT_ERRNO(len,"connection terminated unexpectedly");
-            break;
-        }
-
         if (len == -1) {
             if (errno == EAGAIN || errno == EWOULDBLOCK)
                 continue;
             else {
-                CAT_ERRNO(len,"read failed");
+                CAT_ERRNO(len,"READ FAILED");
                 break;
             }
         }
