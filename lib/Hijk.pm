@@ -112,7 +112,7 @@ sub request {
     # Maybe instead we should just allow you to pass in
     # "fetch => \&Hijk::HTTP::XS::fetch".
     my $fetch = $args->{fetch} || \&Hijk::pp_fetch;
-    my ($status,$body,$head) = $fetch->(fileno($soc), $args->{timeout} && ($args->{timeout}*1000));
+    my ($status,$body,$head) = $fetch->(fileno($soc), (($args->{timeout} || 0) * 1000));
 
     if ($status == 0 || ($head->{Connection} && $head->{Connection} eq 'close')) {
         shutdown(delete $SocketCache->{"$args->{host};$args->{port};$$"}, 2); # or die "shutdown(2) error, errno = $!";
