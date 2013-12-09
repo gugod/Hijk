@@ -1,3 +1,15 @@
+0.06: # 2013-12-09T12:20:00+0100
+- Declare missing test dependency on Test::Exception
+- Declare test dependency on Net::Ping 2.41
+- Various POD improvements describing more limitations in the API and
+  providing examples.
+- Don't unconditionally load the yet-to-be-released Hijk::HTTP::XS
+  module, instead provide a "fetch" option.
+- Shutdown and delete the cached connection in case of read error.
+- Handle syswrite() returning undef without spewing an uninitialized
+  comparison error
+- Various work on the test suite.
+
 0.05: # 2013-12-04T22:33:31+0100
 - Properly invalidate connection cache when seeing 'Connection: close' in the response.
 
