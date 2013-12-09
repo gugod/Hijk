@@ -7,6 +7,10 @@ use Test::Exception;
 use Net::Ping;
 use Hijk;
 
+unless ($ENV{TEST_LIVE}) {
+    plan skip_all => "Enable live testing by setting env: TEST_LIVE=1";
+}
+
 # find a ip and confirm it is not reachable.
 my $pinger = Net::Ping->new("tcp", 2);
 $pinger->port_number(80);

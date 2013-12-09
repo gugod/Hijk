@@ -1,3 +1,7 @@
+0.07: # 2013-12-09T12:50:00+0100
+- Skip the live connect timeout test by default, it will fail making
+  live connections on various firewalled/locked down hosts.
+
 0.06: # 2013-12-09T12:20:00+0100
 - Declare missing test dependency on Test::Exception
 - Declare test dependency on Net::Ping 2.41
