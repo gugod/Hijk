@@ -43,5 +43,11 @@ is_deeply $head, {
     "Transfer-Encoding" => "chunked",
 };
 
+# fetch again without seeking back
+# this will force select() to return because there are actually
+# 0 bytes to read - so we can simulate connection closed 
+# from the other end of the socket (like expired keep-alive)
+my ($status, $body, $head) = Hijk::HTTP::XS::fetch($fd,0);
+is $status, 0;
 
 done_testing;

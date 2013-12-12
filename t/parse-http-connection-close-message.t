@@ -1,6 +1,8 @@
 #!/usr/bin/env perl
 use strict;
 use Test::More;
+use Test::Exception;
+
 use File::Temp ();
 use File::Temp qw/ :seekable /;
 use Hijk;
@@ -42,5 +44,8 @@ is_deeply $head, {
     "Connection" => "close",
 };
 
+throws_ok {
+    my ($status, $body, $head) = Hijk::pp_fetch($fd,0);
+} qr /0 bytes/;
 
 done_testing;
