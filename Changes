@@ -1,3 +1,8 @@
+0.08: # 2013-12-12T20:10:00+0100
+- We only checked for undefined return codes from POSIX::read(), not
+  0, resulting in an infinite select/read loop when a server with
+  keep-alive enabled cut off our connection.
+
 0.07: # 2013-12-09T12:50:00+0100
 - Skip the live connect timeout test by default, it will fail making
   live connections on various firewalled/locked down hosts.
