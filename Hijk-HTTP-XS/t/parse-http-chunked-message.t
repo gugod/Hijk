@@ -4,7 +4,7 @@ use Test::More;
 use File::Temp ();
 use File::Temp qw/ :seekable /;
 use Hijk::HTTP::XS;
-
+use Test::Exception;
 my $fh = File::Temp->new();
 my $fd = do {
     local $/ = undef;
@@ -47,7 +47,8 @@ is_deeply $head, {
 # this will force select() to return because there are actually
 # 0 bytes to read - so we can simulate connection closed 
 # from the other end of the socket (like expired keep-alive)
-my ($status, $body, $head) = Hijk::HTTP::XS::fetch($fd,0);
-is $status, 0;
+throws_ok {
+    my ($status, $body, $head) = Hijk::HTTP::XS::fetch($fd,0);
+} qr /0 bytes/i;
 
 done_testing;

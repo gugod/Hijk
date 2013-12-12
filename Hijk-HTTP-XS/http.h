@@ -47,34 +47,21 @@ static void read_and_store(int fd, struct response *r) {
     if (r->timeout_ms == 0)
         r->timeout_ms = -1;
 
-#define CAT_ERRNO(err,append)                               \
-do {                                                        \
-    r->status = 0;                                          \
-    sv_setpv(r->body,err == -1 ? strerror(errno) : append); \
-    sv_catpvf(r->body," rc: %d",err);                       \
-} while (0)
-
     for (;;) {
         int rc = poll(pfd,1,r->timeout_ms);
 
-        if (rc == -1) {
-            CAT_ERRNO(rc,"POLL FAILED");
-            break;
-        }
+        if (rc == -1)
+            die("POLL FAILED: %s",strerror(errno));
 
-        if (rc == 0 || (rc == 1 && (pfd[0].revents & POLLNVAL))) {
-            CAT_ERRNO(rc, "READ TIMEOUT");
-            break;
-        }
+        if (rc == 0 || (rc == 1 && (pfd[0].revents & POLLNVAL)))
+            die("READ TIMEOUT");
 
         int len = read(fd,buf,sizeof(buf));
         if (len == -1) {
             if (errno == EAGAIN || errno == EWOULDBLOCK)
                 continue;
-            else {
-                CAT_ERRNO(len,"READ FAILED");
-                break;
-            }
+            else
+                die("READ FAILED: %s",strerror(errno));
         }
 
         if ((nparsed = http_parser_execute(&parser,&settings,buf,len)) != len) {
@@ -82,16 +69,13 @@ do {                                                        \
             sv_setpv(r->body,http_errno_description(parser.http_errno));
             break;
         }
-        if (nparsed == 0 && !(r->flags & DONE)) {
-            CAT_ERRNO(nparsed,"Got 0 bytes back, which shouldn't happen");
-            break;
-        }
+
+        if (nparsed == 0 && !(r->flags & DONE))
+            die("Got 0 bytes back, which shouldn't happen, probably keep-alive issue");
 
         if (r->flags & DONE)
             break;
     }
-
-#undef CAT_ERRNO
     cleanup_mid_header_build(r);
 }
 
