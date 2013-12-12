@@ -21,9 +21,12 @@ sub pp_fetch {
         }
 
         $nbytes = POSIX::read($fd, $buf, $block_size);
-        unless (defined($nbytes)) {
-            die "Failed to read http " .( $decapitated ? "body": "head" ). " from socket. errno = $!";
-        }
+
+        die "Failed to read http " .( $decapitated ? "body": "head" ). " from socket. errno = $!"
+            unless defined $nbytes;
+
+        die "Failed to read http " .( $decapitated ? "body": "head" ). " from socket. Got 0 bytes back, which shouldn't happen"
+            if $nbytes == 0;
 
         if ($decapitated) {
             $body .= $buf;
@@ -81,7 +84,8 @@ sub build_http_message {
 
 sub request {
     my $args = $_[0];
-    my $soc = $SocketCache->{"$args->{host};$args->{port};$$"} ||= do {
+    my $key = "$args->{host};$args->{port};$$";
+    my $soc = $SocketCache->{$key} ||= do {
         my ($soc, $flags, $addr);
         $addr = sockaddr_in($args->{port}, inet_aton($args->{host}));
         socket($soc, PF_INET, SOCK_STREAM, getprotobyname('tcp')) || die $!;
@@ -105,9 +109,14 @@ sub request {
         $soc;
     };
     my $r = build_http_message($args);
+    
     my $rc = syswrite($soc,$r);
-    die "send error ($r) $!"
-        if !$rc || $rc != length($r);
+
+    if (!$rc || $rc != length($r)) {
+        shutdown(delete $SocketCache->{$key}, 2);
+        die "send error ($r) $!";
+    }
+        
 
     # Maybe instead we should just allow you to pass in
     # "fetch => \&Hijk::HTTP::XS::fetch".
@@ -115,7 +124,7 @@ sub request {
     my ($status,$body,$head) = $fetch->(fileno($soc), (($args->{timeout} || 0) * 1000));
 
     if ($status == 0 || ($head->{Connection} && $head->{Connection} eq 'close')) {
-        shutdown(delete $SocketCache->{"$args->{host};$args->{port};$$"}, 2); # or die "shutdown(2) error, errno = $!";
+        shutdown(delete $SocketCache->{$key}, 2); # or die "shutdown(2) error, errno = $!";
     }
     return {
         status => $status,

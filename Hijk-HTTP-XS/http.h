@@ -82,6 +82,10 @@ do {                                                        \
             sv_setpv(r->body,http_errno_description(parser.http_errno));
             break;
         }
+        if (nparsed == 0 && !(r->flags & DONE)) {
+            CAT_ERRNO(nparsed,"Got 0 bytes back, which shouldn't happen");
+            break;
+        }
 
         if (r->flags & DONE)
             break;
