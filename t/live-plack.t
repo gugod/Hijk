@@ -35,23 +35,9 @@ my %args = (
 );
 
 subtest "expect timeout" => sub {
-    if ($ENV{HIJK_XS}) {
-        eval {
-            my $res = Hijk::request({%args, timeout => 1});
-            TODO: {
-                local $TODO = "The XS library doesn't throw an exception here";
-                fail($TODO);
-            }
-            1;
-        } or do {
-            my $error = $@ || "Zombie Error";
-            fail("We shouldn't pass this, well, we should, but let's fix the test too");
-        };
-    } else {
-        throws_ok {
-            my $res = Hijk::request({%args, timeout => 1});
-        } qr/timeout/i;
-    }
+    throws_ok {
+        my $res = Hijk::request({%args, timeout => 1});
+    } qr/timeout/i;
 };
 
 subtest "do not expect timeout" => sub {
