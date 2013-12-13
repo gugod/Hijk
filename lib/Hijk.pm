@@ -121,7 +121,7 @@ sub request {
     my ($status,$body,$head) = Hijk::fetch(fileno($soc), (($args->{timeout} || 0) * 1000));
 
     if ($status == 0 || ($head->{Connection} && $head->{Connection} eq 'close')) {
-        disconnect($key);
+        __disconnect($key);
     }
     return {
         status => $status,
