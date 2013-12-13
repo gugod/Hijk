@@ -1,3 +1,7 @@
+0.09: # 2013-12-13T07:38:25+0100
+- KEEP CALM AND REMOVE FETCH OPTION
+- Hijk::request will use XS parser only if Hijk::HTTP::XS is loaded
+
 0.08: # 2013-12-12T20:10:00+0100
 - We only checked for undefined return codes from POSIX::read(), not
   0, resulting in an infinite select/read loop when a server with
