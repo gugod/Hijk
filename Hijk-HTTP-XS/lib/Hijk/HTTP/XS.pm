@@ -1,6 +1,4 @@
 package Hijk::HTTP::XS;
-
-use v5.14.2;
 use strict;
 use warnings;
 
