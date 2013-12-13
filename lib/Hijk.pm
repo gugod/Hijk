@@ -87,6 +87,8 @@ sub build_http_message {
 sub request {
     my $args = $_[0];
     my $key = "$args->{host};$args->{port};$$";
+    local $SIG{__DIE__} = sub { __disconnect($key); die @_;};
+
     my $soc = $SocketCache->{$key} ||= do {
         my ($soc, $flags, $addr);
         $addr = sockaddr_in($args->{port}, inet_aton($args->{host}));
@@ -112,21 +114,25 @@ sub request {
     };
     my $r = build_http_message($args);
     my $rc = syswrite($soc,$r);
-
     if (!$rc || $rc != length($r)) {
-        shutdown(delete $SocketCache->{$key}, 2);
         die "send error ($r) $!";
     }
 
     my ($status,$body,$head) = Hijk::fetch(fileno($soc), (($args->{timeout} || 0) * 1000));
 
     if ($status == 0 || ($head->{Connection} && $head->{Connection} eq 'close')) {
-        shutdown(delete $SocketCache->{$key}, 2); # or die "shutdown(2) error, errno = $!";
+        disconnect($key);
     }
     return {
         status => $status,
         head => $head,
         body => $body
+    };
+}
+
+sub __disconnect {
+    eval {
+        shutdown(delete $SocketCache->{$_[0]}, 2);
     };
 }
 
