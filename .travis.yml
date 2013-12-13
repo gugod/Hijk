@@ -17,9 +17,10 @@ before_install:
   - sleep 5
   - yes | perl -MCPAN::FirstTime -e CPAN::FirstTime::init
   - cpanm --notest --verbose Module::Install Module::Install::CPANfile Devel::Cover Devel::Cover::Report::Coveralls
+  - (cd Hijk-HTTP-XS && perl Makefile.PL && make)
 
 script:
-  cover -delete; if [[ -n "$HIJK_XS" ]]; then (cd Hijk-HTTP-XS && perl Makefile.PL && make) fi; PERL5OPT=-MDevel::Cover prove -Ilib -IHijk-HTTP-XS/lib -I Hijk-HTTP-XS/blib/arch/ -I Hijk-HTTP-XS/blib/lib -r t && cover -report coveralls
+  PERL5OPT=-MDevel::Cover prove -Ilib -IHijk-HTTP-XS/lib -I Hijk-HTTP-XS/blib/arch/ -I Hijk-HTTP-XS/blib/lib -r t && cover -report coveralls
 
 notifications:
   irc:
