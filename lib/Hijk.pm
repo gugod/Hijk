@@ -87,7 +87,6 @@ sub build_http_message {
 sub request {
     my $args = $_[0];
     my $key = "$args->{host};$args->{port};$$";
-    local $SIG{__DIE__} = sub { __disconnect($key); die @_;};
 
     my $soc = $SocketCache->{$key} ||= do {
         my ($soc, $flags, $addr);
@@ -115,10 +114,17 @@ sub request {
     my $r = build_http_message($args);
     my $rc = syswrite($soc,$r);
     if (!$rc || $rc != length($r)) {
+        __disconnect($key);
         die "send error ($r) $!";
     }
 
-    my ($status,$body,$head) = Hijk::fetch(fileno($soc), (($args->{timeout} || 0) * 1000));
+    my ($status,$body,$head) = eval {
+        Hijk::fetch(fileno($soc), (($args->{timeout} || 0) * 1000));
+    } or do {
+        my $err = $@ || "zombie error";
+        __disconnect($key);
+        die $err;
+    };
 
     if ($status == 0 || ($head->{Connection} && $head->{Connection} eq 'close')) {
         __disconnect($key);
