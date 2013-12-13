@@ -137,9 +137,7 @@ sub request {
 }
 
 sub __disconnect {
-    eval {
-        shutdown(delete $SocketCache->{$_[0]}, 2);
-    };
+    shutdown(delete $SocketCache->{$_[0]}, 2);
 }
 
 1;
