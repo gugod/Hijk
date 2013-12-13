@@ -1,6 +1,8 @@
 #!/usr/bin/env perl
 
 use strict;
+use warnings;
+
 use Hijk;
 use Test::More;
 
@@ -8,8 +10,9 @@ unless ($ENV{TEST_LIVE}) {
     plan skip_all => "Enable live testing by setting env: TEST_LIVE=1";
 }
 
+require Hijk::HTTP::XS if $ENV{HIJK_XS};
+
 my %args = (
-    ($ENV{HIJK_XS} ? (fetch => do { require Hijk::HTTP::XS; \&Hijk::HTTP::XS::fetch; }) : ()),
     host => $ENV{TEST_HOST} || "localhost",
     port => "9200",
     method => "GET",

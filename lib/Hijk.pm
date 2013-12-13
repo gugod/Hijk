@@ -64,6 +64,8 @@ sub pp_fetch {
     return ($status_code, $body, $header);
 }
 
+*fetch = \&pp_fetch;
+
 sub build_http_message {
     my $args = $_[0];
     my $path_and_qs = ($args->{path} || "/") . ( defined($args->{query_string}) ? ("?".$args->{query_string}) : "" );
@@ -109,19 +111,14 @@ sub request {
         $soc;
     };
     my $r = build_http_message($args);
-    
     my $rc = syswrite($soc,$r);
 
     if (!$rc || $rc != length($r)) {
         shutdown(delete $SocketCache->{$key}, 2);
         die "send error ($r) $!";
     }
-        
 
-    # Maybe instead we should just allow you to pass in
-    # "fetch => \&Hijk::HTTP::XS::fetch".
-    my $fetch = $args->{fetch} || \&Hijk::pp_fetch;
-    my ($status,$body,$head) = $fetch->(fileno($soc), (($args->{timeout} || 0) * 1000));
+    my ($status,$body,$head) = Hijk::fetch(fileno($soc), (($args->{timeout} || 0) * 1000));
 
     if ($status == 0 || ($head->{Connection} && $head->{Connection} eq 'close')) {
         shutdown(delete $SocketCache->{$key}, 2); # or die "shutdown(2) error, errno = $!";
@@ -217,12 +214,6 @@ with default values listed below
 =item head => []
 
 =item body => ""
-
-=item fetch => ...
-
-An optional subroutine reference we'll use to do to the fetching. Load
-L<Hijk::HTTP::XS> and set it to C<\&Hijk::HTTP::XS::fetch> to use an
-XS fetcher.
 
 =back
 

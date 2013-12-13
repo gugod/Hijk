@@ -9,6 +9,11 @@ our $VERSION = '0.01';
 require XSLoader;
 XSLoader::load('Hijk::HTTP::XS', $VERSION);
 
+{
+    no warnings 'redefine';
+     *Hijk::fetch = \&Hijk::HTTP::XS::fetch;
+}
+
 1;
 __END__
 
@@ -17,6 +22,13 @@ __END__
 Hijk::HTTP::XS - Simple XS http response parser using https://github.com/joyent/http-parser
 
 =head1 SYNOPSIS
+
+Use L<Hijk> with this XS version of http message parser:
+
+    use Hijk;
+    require Hijk::HTTP::XS;
+
+Or directly use it to parse it out of a fd:
 
     use strict;
     use warnings;

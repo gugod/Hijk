@@ -4,6 +4,7 @@ use strict;
 use FindBin;
 
 use Hijk;
+require Hijk::HTTP::XS if $ENV{HIJK_XS};
 
 use Test::More;
 use Test::Exception;
@@ -27,7 +28,6 @@ if ($pid == 0) {
 sleep 5; # hopfully this is enough to launch that psgi.
 
 my %args = (
-    ($ENV{HIJK_XS} ? (fetch => do { require Hijk::HTTP::XS; \&Hijk::HTTP::XS::fetch; }) : ()),
     host => "localhost",
     port => "5001",
     query_string => "t=5",

@@ -6,6 +6,7 @@ use Test::Exception;
 
 use Net::Ping;
 use Hijk;
+require Hijk::HTTP::XS if $ENV{HIJK_XS};
 
 unless ($ENV{TEST_LIVE}) {
     plan skip_all => "Enable live testing by setting env: TEST_LIVE=1";
@@ -29,7 +30,6 @@ pass "ip generated = $ip";
 
 throws_ok {
     my $res = Hijk::request({
-        ($ENV{HIJK_XS} ? (fetch => do { require Hijk::HTTP::XS; \&Hijk::HTTP::XS::fetch; }) : ()),
         host => $ip,
         port => 80,
         timeout => 1            # seconds
@@ -38,7 +38,6 @@ throws_ok {
 
 lives_ok {
     my $res = Hijk::request({
-        ($ENV{HIJK_XS} ? (fetch => do { require Hijk::HTTP::XS; \&Hijk::HTTP::XS::fetch; }) : ()),
         host => 'google.com',
         port => 80,
         timeout => 0
