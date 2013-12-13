@@ -199,32 +199,21 @@ like L<HTTP::Tiny>, L<Furl> or L<LWP::UserAgent>.
 This is the only function to be used. It is not exported to its caller namespace
 at all. It takes a request arguments in HashRef and returns the response in HashRef.
 
-The C<$args> request arg should contain key-value pairs from the following
-table. The value for C<host> and C<port> are mandatory and others are optional
-with default values listed below
+The C<$args> request arg should be a HashRef containing key-value pairs from the
+following list. The value for C<host> and C<port> are mandatory and others are
+optional with default values listed below
 
-=over 4
+    host         => ...,
+    port         => ...,
+    timeout      => 0,
+    method       => "GET",
+    path         => "/",
+    query_string => "",
+    head         => [],
+    body         => "",
 
-=item host => ...
-
-=item port => ...
-
-=item timeout => 0
-
-=item method => "GET"
-
-=item path => "/"
-
-=item query_string => ""
-
-=item head => []
-
-=item body => ""
-
-=back
-
-Too keep the implementation straight-forward, Hijk does not take full URL string
-as input.
+Too keep the implementation minimal, Hijk does not take full URL string as
+input. User who need to parse URL string could use L<URI> modules.
 
 The value of C<head> is an ArrayRef of key-value pairs instead of HashRef, this way
 the order of headers can be maintained. For example:
