@@ -19,10 +19,7 @@ before_install:
   - cpanm --notest --verbose Module::Install Module::Install::CPANfile Devel::Cover Devel::Cover::Report::Coveralls
 
 script:
-  if [[ $HIJK_XS ]]; then
-      (cd Hijk-HTTP-XS && perl Makefile.PL && make)
-  fi
-  PERL5OPT=-MDevel::Cover prove -Ilib -IHijk-HTTP-XS/lib -I Hijk-HTTP-XS/blib/arch/ -I Hijk-HTTP-XS/blib/lib -r t && cover -report coveralls
+  if [[ -n "$HIJK_XS" ]]; then (cd Hijk-HTTP-XS && perl Makefile.PL && make) fi; PERL5OPT=-MDevel::Cover prove -Ilib -IHijk-HTTP-XS/lib -I Hijk-HTTP-XS/blib/arch/ -I Hijk-HTTP-XS/blib/lib -r t && cover -report coveralls
 
 notifications:
   irc:
