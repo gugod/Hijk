@@ -1,6 +1,14 @@
-package Hijk;
 use strict;
 use warnings;
+
+package Hijk::Error;
+
+use constant {
+    CONNECT_TIMEOUT => 1,
+    READ_TIMEOUT    => 2
+};
+
+package Hijk;
 use POSIX qw(EINPROGRESS);
 use Socket qw(PF_INET SOCK_STREAM sockaddr_in inet_aton $CRLF);
 use Fcntl qw(F_GETFL F_SETFL O_NONBLOCK);
@@ -17,7 +25,7 @@ sub pp_fetch {
         if ($timeout) {
             $nfound = select($rin, undef, undef, $timeout);
             die "select(2) error, errno = $!" if $nfound == -1;
-            die "READ TIMEOUT" unless $nfound == 1;
+            return (0,undef,undef, Hijk::Error::READ_TIMEOUT) unless $nfound == 1;
         }
 
         $nbytes = POSIX::read($fd, $buf, $block_size);
@@ -99,7 +107,10 @@ sub request {
         connect($soc, $addr) or do {
             if ($! == EINPROGRESS) {
                 vec(my $w = '', fileno($soc), 1) = 1;
-                my $n = select(undef, $w, undef, $args->{timeout}) or  die "CONNECT TIMEOUT";
+                my $n = select(undef, $w, undef, $args->{timeout}) or return {
+                    error => Hijk::Error::CONNECT_TIMEOUT
+                };
+
                 die "select(2) error, errno = $!" if $n < 0;
             }
             else {
@@ -118,7 +129,7 @@ sub request {
         die "send error ($r) $!";
     }
 
-    my ($status,$body,$head) = eval {
+    my ($status,$body,$head,$error) = eval {
         Hijk::fetch(fileno($soc), (($args->{timeout} || 0) * 1000));
     } or do {
         my $err = $@ || "zombie error";
@@ -132,7 +143,8 @@ sub request {
     return {
         status => $status,
         head => $head,
-        body => $body
+        body => $body,
+        error => $error,
     };
 }
 

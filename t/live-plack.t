@@ -34,15 +34,17 @@ my %args = (
     method => "GET",
 );
 
-subtest "expect timeout" => sub {
-    throws_ok {
+subtest "expect read timeout" => sub {
+    lives_ok {
         my $res = Hijk::request({%args, timeout => 1});
-    } qr/timeout/i;
+        ok exists $res->{error}, '$res->{error} should exist becasue a read timeout is expected.';
+        is $res->{error}, Hijk::Error::READ_TIMEOUT, '$res->{error} == Hijk::Error::READ_TIMEOUT';
+    };
 };
 
 subtest "do not expect timeout" => sub {
     lives_ok {
-        my $res = Hijk::request({%args, timeout => 10_000});
+        my $res = Hijk::request({%args, timeout => 10});
     } 'local plack send back something within 10s';
 };
 

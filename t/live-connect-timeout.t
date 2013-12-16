@@ -28,13 +28,16 @@ if ($iter == 0) {
 
 pass "ip generated = $ip";
 
-throws_ok {
+lives_ok {
     my $res = Hijk::request({
         host => $ip,
         port => 80,
         timeout => 1            # seconds
     });
-} qr/CONNECT\s*TIMEOUT/i;
+
+    ok exists $res->{error}, '$res->{error} exists because we expect error to happen.';
+    is $res->{error}, Hijk::Error::CONNECT_TIMEOUT, '$res->{error} contiain the value of Hijk::Error::CONNECT_TIMEOUT, indicating that it timed-out when establishing connection';
+};
 
 lives_ok {
     my $res = Hijk::request({
@@ -42,6 +45,8 @@ lives_ok {
         port => 80,
         timeout => 0
     });
+
+    ok ! exists $res->{error}, '$res->{error} does not exists, because we do not expect connect timeout to happen';
 };
 
 
