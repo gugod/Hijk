@@ -46,8 +46,7 @@ lives_ok {
         timeout => 0
     });
 
-    ok ! exists $res->{error}, '$res->{error} does not exists, because we do not expect connect timeout to happen';
-};
+    ok !exists($res->{error}), '$res->{error} does not exist, because we do not expect connect timeout to happen'};
 
 
 done_testing;

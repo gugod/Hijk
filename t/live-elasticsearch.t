@@ -25,15 +25,21 @@ my @tests = (
 );
 
 for ((@tests) x (300)) {
+
     my $a = {%args, @$_ };
     my $res = Hijk::request($a);
-    my $res_body = $res->{body};
-    my $test_name = "$a->{path}\t". substr($res_body, 0, 60)."...\n";
-    if (substr($res_body, 0, 1) eq '{' && substr($res_body, -1, 1) eq '}' ) {
-        pass $test_name;
+    if ($res->{error}) {
+        fail "Error happened when requesting $a->{path}: $res->{error}";
     }
     else {
-        fail $test_name;
+        my $res_body = $res->{body};
+        my $test_name = "$a->{path}\t". substr($res_body, 0, 60)."...\n";
+        if (substr($res_body, 0, 1) eq '{' && substr($res_body, -1, 1) eq '}' ) {
+            pass $test_name;
+        }
+        else {
+            fail $test_name;
+        }
     }
 }
 

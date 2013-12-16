@@ -19,9 +19,12 @@ my %args = (
 );
 
 subtest "with 1ms timeout limit, expect an exception." => sub {
-    throws_ok {
+    lives_ok {
         my $res = Hijk::request({%args, timeout => 0.001});
-    } qr/timeout/i;
+
+        ok exists $res->{error};
+        is $res->{error}, Hijk::Error::CONNECT_TIMEOUT;
+    };
 };
 
 subtest "with 1s timeout limit, do not expect an exception." => sub {
