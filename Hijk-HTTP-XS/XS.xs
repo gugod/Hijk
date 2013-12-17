@@ -28,7 +28,7 @@ void fetch(int fd,int timeout_ms)
         PUSHs(sv_2mortal(resp.body));
         PUSHs(newRV_noinc((SV *)resp.header));
         if (error != 0)
-            PUSHs(newSVnv(error));
+            XPUSHs(newSVnv(error));
 
 void fd_set_blocking(int fd, int blocking)
     CODE:
