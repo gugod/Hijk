@@ -9,6 +9,7 @@ MODULE = Hijk::HTTP::XS		PACKAGE = Hijk::HTTP::XS
 
 void fetch(int fd,int timeout_ms)
     PPCODE:
+        int error = 0;
         SV *body = newSVpv("",0);
         HV *header = newHV();
         EXTEND(SP,3);
@@ -22,10 +23,12 @@ void fetch(int fd,int timeout_ms)
                                    .timeout_ms = timeout_ms,
                         };
 
-        read_and_store(fd,&resp);
+        error = read_and_store(fd,&resp);
         PUSHs(sv_2mortal(newSViv(resp.status)));
         PUSHs(sv_2mortal(resp.body));
         PUSHs(newRV_noinc((SV *)resp.header));
+        if (error != 0)
+            PUSHs(newSVnv(error));
 
 void fd_set_blocking(int fd, int blocking)
     CODE:

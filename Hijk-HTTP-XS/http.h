@@ -33,10 +33,10 @@ static http_parser_settings settings = {
     .on_message_complete = message_complete_cb
 };
 
-static void read_and_store(int fd, struct response *r) {
+static int read_and_store(int fd, struct response *r) {
     struct http_parser parser;
     char buf[BUFSIZ];
-    int rc, nparsed, len;
+    int rc, nparsed, len, error = 0;
     struct pollfd pfd[1];
     memset(&parser,0,sizeof(parser));
     http_parser_init(&parser, HTTP_RESPONSE);
@@ -53,8 +53,10 @@ static void read_and_store(int fd, struct response *r) {
         if (rc == -1)
             die("POLL FAILED: %s",strerror(errno));
 
-        if (rc == 0 || (rc == 1 && (pfd[0].revents & POLLNVAL)))
-            die("READ TIMEOUT");
+        if (rc == 0 || (rc == 1 && (pfd[0].revents & POLLNVAL))) {
+          error = 2; // Hijk::Error::READ_TIMEOUT
+          break;
+        }
 
         int len = read(fd,buf,sizeof(buf));
         if (len == -1) {
@@ -77,6 +79,7 @@ static void read_and_store(int fd, struct response *r) {
             break;
     }
     cleanup_mid_header_build(r);
+    return error;
 }
 
 static void cleanup_mid_header_build(struct response *r) {
