@@ -1,19 +1,16 @@
+package Hijk;
 use strict;
 use warnings;
-
-package Hijk::Error;
-
-use constant {
-    CONNECT_TIMEOUT => 1,
-    READ_TIMEOUT    => 2
-};
-
-package Hijk;
 use POSIX qw(EINPROGRESS);
 use Socket qw(PF_INET SOCK_STREAM sockaddr_in inet_aton $CRLF);
 use Fcntl qw(F_GETFL F_SETFL O_NONBLOCK);
 our $VERSION = "0.09";
 my $SocketCache = {};
+
+sub Hijk::Error::CONNECT_TIMEOUT () { 1 << 0 } # 1
+sub Hijk::Error::READ_TIMEOUT    () { 1 << 1 } # 2
+sub Hijk::Error::TIMEOUT         () { Hijk::Error::READ_TIMEOUT() | Hijk::Error::CONNECT_TIMEOUT() } # 3
+# sub Hijk::Error::WHATEVER      () { 1 << 2 } # 4
 
 sub pp_fetch {
     my $fd = shift || die "need file descriptor";
@@ -174,6 +171,10 @@ A simple GET request:
         path         => "/flower",
         query_string => "color=red"
     });
+
+    if (exists $res->{error} and $res->{error} & Hijk::Error::TIMEOUT) {
+        die "Oh noes we had some sort of timeout";
+    }
 
     die unless ($res->{status} == "200");
 
