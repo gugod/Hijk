@@ -1,3 +1,13 @@
+0.10:
+- Fix a really nasty bug with mixings up requests after encountering a
+  timeout. See
+  http://lists.unbit.it/pipermail/uwsgi/2013-December/006802.html for
+  details.
+- Remove spurious requirenment on perl v5.14.2
+- First stab at https://github.com/gugod/Hijk/issues/3 we'll now
+  return an error key in the response with
+  Hijk::Error::{CONNECT_TIMEOUT,READ_TIMEOUT} instead of dying.
+
 0.09: # 2013-12-13T07:38:25+0100
 - KEEP CALM AND REMOVE FETCH OPTION
 - Hijk::request will use XS parser only if Hijk::HTTP::XS is loaded
