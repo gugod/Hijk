@@ -1,4 +1,4 @@
-0.10:
+0.10: # 2013-12-19T16:50:00+0100
 - We can now talk HTTP/1.0 an addition to HTTP/1.1, have a way to
   disable the socket cache, and can specify connect and read timeouts
   independently.
