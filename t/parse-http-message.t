@@ -27,7 +27,7 @@ my $fd = do {
     fileno($fh);
 };
 
-my ($status, $body, $head) = Hijk::pp_fetch($fd);
+my ($status, $body, $head) = Hijk::fetch($fd);
 
 
 is $status, 200;

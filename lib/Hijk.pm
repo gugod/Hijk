@@ -5,22 +5,21 @@ use POSIX qw(EINPROGRESS);
 use Socket qw(PF_INET SOCK_STREAM sockaddr_in inet_aton $CRLF);
 use Fcntl qw(F_GETFL F_SETFL O_NONBLOCK);
 our $VERSION = "0.09";
-my $SocketCache = {};
 
 sub Hijk::Error::CONNECT_TIMEOUT () { 1 << 0 } # 1
 sub Hijk::Error::READ_TIMEOUT    () { 1 << 1 } # 2
 sub Hijk::Error::TIMEOUT         () { Hijk::Error::READ_TIMEOUT() | Hijk::Error::CONNECT_TIMEOUT() } # 3
 # sub Hijk::Error::WHATEVER      () { 1 << 2 } # 4
 
-sub pp_fetch {
+sub fetch {
     my $fd = shift || die "need file descriptor";
-    my ($timeout,$block_size,$header,$head,$body,$buf,$decapitated,$nfound,$nbytes) = (shift,10240,{},"");
+    my ($read_timeout,$block_size,$header,$head,$body,$buf,$decapitated,$nfound,$nbytes) = (shift,10240,{},"");
     my $status_code = 0;
-    $timeout /= 1000 if defined $timeout;
+    $read_timeout /= 1000 if defined $read_timeout;
     vec(my $rin = '', $fd, 1) = 1;
     do {
-        if ($timeout) {
-            $nfound = select($rin, undef, undef, $timeout);
+        if ($read_timeout) {
+            $nfound = select($rin, undef, undef, $read_timeout);
             die "select(2) error, errno = $!" if $nfound == -1;
             return (0,undef,undef, Hijk::Error::READ_TIMEOUT) unless $nfound == 1;
         }
@@ -69,14 +68,42 @@ sub pp_fetch {
     return ($status_code, $body, $header);
 }
 
-*fetch = \&pp_fetch;
+sub construct_socket {
+    my ($host, $port, $connect_timeout) = @_;
+    my $soc;
+    socket($soc, PF_INET, SOCK_STREAM, getprotobyname('tcp')) || die "Failed to construct TCP socket: $!";
+    my $flags;
+    if ($connect_timeout) {
+        $flags = fcntl($soc, F_GETFL, 0) or die "Failed to set fcntl F_GETFL flag for socket connect timeout (before connection): $!";
+        fcntl($soc, F_SETFL, $flags | O_NONBLOCK) or die "Failed to set fcntl O_NONBLOCK flag for socket connect timeout: $!";
+    }
+    my $addr = sockaddr_in($port, inet_aton($host));
+    connect($soc, $addr) or do {
+        if ($! == EINPROGRESS) {
+            vec(my $w = '', fileno($soc), 1) = 1;
+            my $n = select(undef, $w, undef, $connect_timeout);
+            unless ($n) {
+                return (undef, { error => Hijk::Error::CONNECT_TIMEOUT });
+            }
+
+            die "select(2) error, errno = $!" if $n < 0;
+        } else {
+            die "connect(2) error, errno = $!";
+        }
+    };
+    if ($connect_timeout) {
+        fcntl($soc, F_SETFL, $flags) or die "Failed to set fcntl F_GETFL flag for socket connect timeout (after connection): $!";
+    }
+
+    return $soc;
+}
 
 sub build_http_message {
     my $args = $_[0];
     my $path_and_qs = ($args->{path} || "/") . ( defined($args->{query_string}) ? ("?".$args->{query_string}) : "" );
     return join(
         $CRLF,
-        ($args->{method} || "GET")." $path_and_qs HTTP/1.1",
+        ($args->{method} || "GET")." $path_and_qs " . ($args->{protocol} || "HTTP/1.1"),
         "Host: $args->{host}",
         $args->{body} ? ("Content-Length: " . length($args->{body})) : (),
         $args->{head} ? (
@@ -89,53 +116,48 @@ sub build_http_message {
     ) . $CRLF;
 }
 
+our $SOCKET_CACHE = {};
 sub request {
     my $args = $_[0];
-    my $key = "$args->{host};$args->{port};$$";
 
-    my $soc = $SocketCache->{$key} ||= do {
-        my ($soc, $flags, $addr);
-        $addr = sockaddr_in($args->{port}, inet_aton($args->{host}));
-        socket($soc, PF_INET, SOCK_STREAM, getprotobyname('tcp')) || die $!;
-        if ($args->{timeout}) {
-            $flags = fcntl($soc, F_GETFL, 0) or die $!;
-            fcntl($soc, F_SETFL, $flags | O_NONBLOCK) or die $!;
-        }
-        connect($soc, $addr) or do {
-            if ($! == EINPROGRESS) {
-                vec(my $w = '', fileno($soc), 1) = 1;
-                my $n = select(undef, $w, undef, $args->{timeout}) or return {
-                    error => Hijk::Error::CONNECT_TIMEOUT
-                };
+    # Backwards compatibility for code that provided the old timeout
+    # argument.
+    $args->{connect_timeout} = $args->{read_timeout} = $args->{timeout} if exists $args->{timeout};
 
-                die "select(2) error, errno = $!" if $n < 0;
-            }
-            else {
-                die "connect(2) error, errno = $!";
-            }
-        };
-        if ($args->{timeout}) {
-            fcntl($soc, F_SETFL, $flags) or die $!;
-        }
-        $soc;
-    };
+    # Ditto for providing a default socket cache, allow for setting it
+    # to "socket_cache => undef" to disable the cache.
+    $args->{socket_cache} = $SOCKET_CACHE unless exists $args->{socket_cache};
+    my $cache_key; $cache_key = "$args->{host};$args->{port};$$" if exists $args->{socket_cache};
+
+    my $soc;
+    if (defined $cache_key and exists $args->{socket_cache}->{$cache_key}) {
+        $soc = $args->{socket_cache}->{$cache_key};
+    } else {
+        ($soc, my $error) = construct_socket(@$args{qw(host port connect_timeout)});
+        return $error if defined $error; # To maybe return the CONNECT_TIMEOUT
+        $args->{socket_cache}->{$cache_key} = $soc if defined $cache_key;
+    }
+
     my $r = build_http_message($args);
     my $rc = syswrite($soc,$r);
     if (!$rc || $rc != length($r)) {
-        __disconnect($key);
+        delete $args->{socket_cache}->{$cache_key} if defined $cache_key;
+        shutdown($soc, 2);
         die "send error ($r) $!";
     }
 
     my ($status,$body,$head,$error) = eval {
-        Hijk::fetch(fileno($soc), (($args->{timeout} || 0) * 1000));
+        fetch(fileno($soc), (($args->{read_timeout} || 0) * 1000));
     } or do {
         my $err = $@ || "zombie error";
-        __disconnect($key);
+        delete $args->{socket_cache}->{$cache_key} if defined $cache_key;
+        shutdown($soc, 2);
         die $err;
     };
 
     if ($status == 0 || ($head->{Connection} && $head->{Connection} eq 'close')) {
-        __disconnect($key);
+        delete $args->{socket_cache}->{$cache_key} if defined $cache_key;
+        shutdown($soc, 2);
     }
     return {
         status => $status,
@@ -143,10 +165,6 @@ sub request {
         body => $body,
         defined($error) ? ( error => $error ) : (),
     };
-}
-
-sub __disconnect {
-    shutdown(delete $SocketCache->{$_[0]}, 2);
 }
 
 1;
@@ -220,14 +238,17 @@ The C<$args> request arg should be a HashRef containing key-value pairs from the
 following list. The value for C<host> and C<port> are mandatory and others are
 optional with default values listed below
 
-    host         => ...,
-    port         => ...,
-    timeout      => 0,
-    method       => "GET",
-    path         => "/",
-    query_string => "",
-    head         => [],
-    body         => "",
+    protocol        => "HTTP/1.1", # (or "HTTP/1.0")
+    host            => ...,
+    port            => ...,
+    connect_timeout => 0,
+    read_timeout    => 0,
+    method          => "GET",
+    path            => "/",
+    query_string    => "",
+    head            => [],
+    body            => "",
+    socket_cache    => {}, # (undef to disable, or \my %your_socket_cache)
 
 Too keep the implementation minimal, Hijk does not take full URL string as
 input. User who need to parse URL string could use L<URI> modules.
@@ -247,10 +268,27 @@ the order of headers can be maintained. For example:
 
 Again, there are no extra character-escaping filter within Hijk.
 
-The value of C<timeout> is in seconds, and is used as the time limit for both
-connecting to the host, and reading from the socket. The default value C<0>
-means that there is no timeout limit. If the host is really unreachable, it will
-reach the system TCP timeout limit then dies.
+The value of C<connect_timeout> or C<read_timeout> is in seconds, and
+is used as the time limit for connecting to the host, and reading from
+the socket, respectively. You can't provide a non-zero read timeout
+without providing a non-zero connect timeout, as the socket has to be
+set up with the C<O_NONBLOCK> flag for the C<read_timeout> to work,
+which we only do if we have a C<connect_timeout>. The default value
+for both is C<0>, meaning no timeout limit. If the host is really
+unreachable or slow, we'll reach the TCP timeout limit before dying.
+
+The default C<protocol> is C<HTTP/1.1>, but you can also specify
+C<HTTP/1.0>. The advantage of using HTTP/1.1 is support for
+keep-alive, which matters a lot in environments where the connection
+setup represents non-trivial overhead. Sometimes that overhead is
+negligible (e.g. on Linux talking to an nginx on the local network),
+and keeping open connections down and reducing complexity is more
+important, in those cases you can use C<HTTP/1.0>.
+
+By default we will provide a C<socket_cache> for you which is a global
+singleton that we maintain keyed on host/port/pid. Alternatively you
+can pass in C<socket_cache> hash of your own which we'll use as the
+cache. To completely disable the cache pass in C<undef>.
 
 The return vaue is a HashRef representing a response. It contains the following
 key-value pairs.
@@ -296,6 +334,8 @@ pick them up.
 =over 4
 
 =item Kang-min Liu <gugod@gugod.org>
+
+=item Ævar Arnfjörð Bjarmason <avar@cpan.org>
 
 =item Borislav Nikolov <jack@sofialondonmoskva.com>
 
