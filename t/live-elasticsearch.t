@@ -10,6 +10,10 @@ unless ($ENV{TEST_LIVE}) {
     plan skip_all => "Enable live testing by setting env: TEST_LIVE=1";
 }
 
+unless ($ENV{TEST_ELASTICSEARCH}) {
+    plan skip_all => "Enable live ElasticSearch testing by setting env: TEST_ELASTICSEARCH=1";
+}
+
 my %args = (
     host => $ENV{TEST_HOST} || "localhost",
     port => "9200",
