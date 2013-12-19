@@ -141,7 +141,7 @@ sub request {
         status => $status,
         head => $head,
         body => $body,
-        !defined($error)?():( error => $error ),
+        defined($error) ? ( error => $error ) : (),
     };
 }
 
