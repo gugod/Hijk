@@ -3,7 +3,6 @@ use strict;
 use warnings;
 use Benchmark ':all';
 use Hijk;
-use Hijk::HTTP::XS;
 use HTTP::Tiny;
 use LWP::UserAgent;
 use HTTP::Request;
@@ -26,13 +25,6 @@ my $lwp = LWP::UserAgent->new();
 cmpthese(10_000,{
     'tiny___' => sub {
         my $res = $tiny->get('http://localhost:9200/_search',{content => $body });
-    },
-    'hijk xs' => sub {
-        my $res = Hijk::request({path => "/_search", body => $body,
-                                 host => 'localhost',
-                                 port => 9200,
-                                 fetch => \&Hijk::HTTP::XS::fetch,
-                                 method => 'GET'});
     },
     'hijk pp' => sub {
         my $res = Hijk::request({path => "/_search", body => $body,

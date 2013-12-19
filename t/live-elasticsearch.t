@@ -10,8 +10,6 @@ unless ($ENV{TEST_LIVE}) {
     plan skip_all => "Enable live testing by setting env: TEST_LIVE=1";
 }
 
-require Hijk::HTTP::XS if $ENV{HIJK_XS};
-
 my %args = (
     host => $ENV{TEST_HOST} || "localhost",
     port => "9200",

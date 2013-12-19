@@ -4,7 +4,6 @@ use strict;
 use FindBin;
 
 use Hijk;
-require Hijk::HTTP::XS if $ENV{HIJK_XS};
 
 use Test::More;
 use Test::Exception;
