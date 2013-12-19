@@ -301,6 +301,8 @@ key-value pairs.
 
 =item head => :HashRef
 
+=item error => :Int
+
 =back
 
 For example, to send request to C<http://example.com/flower?color=red>, use the
@@ -328,6 +330,37 @@ This makes it easier to retrieve specific header fields.
 We currently don't support returning a body without a Content-Length
 header, bodies B<MUST> have an accompanying Content-Length or we won't
 pick them up.
+
+If we had an error we'll include an "error" key whose value is a
+bitfield that you can check against Hijk::Error::* constants. Those
+are:
+
+=over 4
+
+=item Hijk::Error::CONNECT_TIMEOUT
+
+=item Hijk::Error::READ_TIMEOUT
+
+=item Hijk::Error::TIMEOUT
+
+=back
+
+The Hijk::Error::TIMEOUT constant is the same as
+C<Hijk::Error::CONNECT_TIMEOUT | Hijk::Error::READ_TIMEOUT>. It's
+there for convenience so you can do:
+
+    .. if exists $res->{error} and $res->{error} & Hijk::Error::TIMEOUT;
+
+Instead of the more verbose:
+
+    .. if exists $res->{error} and $res->{error} & (Hijk::Error::CONNECT_TIMEOUT | Hijk::Error::READ_TIMEOUT)
+
+Hijk C<WILL> call die if any system calls that it executes fail with
+errors that aren't covered by C<Hijk::Error::*>, so wrap it in an
+C<eval> if you don't want to die in those cases. We just provide
+C<Hijk::Error::*> for non-exceptional failures like timeouts, not for
+e.g. you trying to connect to a host that doesn't exist or a socket
+unexpectedly going away etc.
 
 =head1 AUTHORS
 
