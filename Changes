@@ -12,6 +12,8 @@
   Hijk::Error::{CONNECT_TIMEOUT,READ_TIMEOUT} instead of dying.
 - Nuked the Hijk::HTTP::XS support from the repo, we've decided it was
   too complex for its own good.
+- Add support for an on_connect callback for seeing how long the
+  connect/reads take.
 
 0.09: # 2013-12-13T07:38:25+0100
 - KEEP CALM AND REMOVE FETCH OPTION

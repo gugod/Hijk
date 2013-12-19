@@ -136,6 +136,7 @@ sub request {
         ($soc, my $error) = construct_socket(@$args{qw(host port connect_timeout)});
         return $error if defined $error; # To maybe return the CONNECT_TIMEOUT
         $args->{socket_cache}->{$cache_key} = $soc if defined $cache_key;
+        $args->{on_connect}->() if exists $args->{on_connect};
     }
 
     my $r = build_http_message($args);
@@ -249,6 +250,7 @@ optional with default values listed below
     head            => [],
     body            => "",
     socket_cache    => {}, # (undef to disable, or \my %your_socket_cache)
+    on_connect      => undef, # (or sub { ... })
 
 Too keep the implementation minimal, Hijk does not take full URL string as
 input. User who need to parse URL string could use L<URI> modules.
@@ -276,6 +278,17 @@ set up with the C<O_NONBLOCK> flag for the C<read_timeout> to work,
 which we only do if we have a C<connect_timeout>. The default value
 for both is C<0>, meaning no timeout limit. If the host is really
 unreachable or slow, we'll reach the TCP timeout limit before dying.
+
+The optional C<on_connect> callback is intended to be used for you to
+figure out from production traffic what you should set the
+C<connect_timeout>. I.e. you can start a timer when you call
+C<Hijk::request()> that you end when C<on_connect> is called, that's
+how long is took us to get a connection, if you start another timer in
+that callback that you end when C<Hijk::request()> returns to you
+that'll give you how long it took to send/receive data after we
+constructed the socket, i.e. it'll help you to tweak your
+C<read_timeout>. The C<on_connect> callback is provided with no
+arguments, and is called in void context.
 
 The default C<protocol> is C<HTTP/1.1>, but you can also specify
 C<HTTP/1.0>. The advantage of using HTTP/1.1 is support for
