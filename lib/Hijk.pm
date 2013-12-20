@@ -21,7 +21,7 @@ sub fetch {
         if ($read_timeout) {
             $nfound = select($rin, undef, undef, $read_timeout);
             die "select(2) error, errno = $!" if $nfound == -1;
-            return (0,undef,undef, Hijk::Error::READ_TIMEOUT) unless $nfound == 1;
+            return (undef,0,undef,undef, Hijk::Error::READ_TIMEOUT) unless $nfound == 1;
         }
 
         $nbytes = POSIX::read($fd, $buf, $block_size);
