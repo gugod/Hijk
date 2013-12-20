@@ -1,6 +1,10 @@
 0.11:
 - Fixed broken HTTP header parsing for servers that didn't return the
   entire header all at the same time, but in chunks.
+- We now return "proto" as well as "status" etc. in the response, so
+  you can see what the protocol the server was using to speak to
+  us. Also we pro-actively connections to servers that claim they're
+  speaking HTTP/1.0.
 
 0.10: # 2013-12-19T16:50:00+0100
 - We can now talk HTTP/1.0 an addition to HTTP/1.1, have a way to
