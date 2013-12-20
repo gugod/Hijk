@@ -154,7 +154,15 @@ sub request {
         die $err;
     };
 
-    if ($status == 0 || $proto eq 'HTTP/1.0' || ($head->{Connection} && $head->{Connection} eq 'close')) {
+    if ($status == 0
+        # We always close connections for 1.0 because some servers LIE
+        # and say that they're 1.0 but don't close the connection on
+        # us! An example of this. Test::HTTP::Server (used by the
+        # ShardedKV::Storage::Rest tests) is an example of such a
+        # server. In either case we can't cache a connection for a 1.0
+        # server anyway, so BEGONE!
+        or (defined $proto and $proto eq 'HTTP/1.0')
+        or ($head->{Connection} && $head->{Connection} eq 'close')) {
         delete $args->{socket_cache}->{$cache_key} if defined $cache_key;
         shutdown($soc, 2);
     }
@@ -306,6 +314,8 @@ The return vaue is a HashRef representing a response. It contains the following
 key-value pairs.
 
 =over 4
+
+=item proto => :Str
 
 =item status => :StatusCode
 
