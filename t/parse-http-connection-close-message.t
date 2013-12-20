@@ -29,7 +29,7 @@ my $fd = do {
     fileno($fh);
 };
 
-my ($status, $body, $head) = Hijk::fetch($fd,0);
+my ($proto, $status, $body, $head) = Hijk::fetch($fd,0);
 
 
 is $status, 200;
@@ -45,7 +45,7 @@ is_deeply $head, {
 };
 
 throws_ok {
-    my ($status, $body, $head) = Hijk::fetch($fd,0);
+    my ($proto, $status, $body, $head) = Hijk::fetch($fd,0);
 } qr /0 bytes/;
 
 done_testing;

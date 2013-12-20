@@ -13,7 +13,7 @@ sub Hijk::Error::TIMEOUT         () { Hijk::Error::READ_TIMEOUT() | Hijk::Error:
 
 sub fetch {
     my $fd = shift || die "need file descriptor";
-    my ($read_timeout,$block_size,$header,$head,$body,$buf,$decapitated,$nfound,$nbytes) = (shift,10240,{},"");
+    my ($read_timeout,$block_size,$header,$head,$body,$buf,$decapitated,$nfound,$nbytes,$proto) = (shift,10240,{},"");
     my $status_code = 0;
     $read_timeout /= 1000 if defined $read_timeout;
     vec(my $rin = '', $fd, 1) = 1;
@@ -21,7 +21,7 @@ sub fetch {
         if ($read_timeout) {
             $nfound = select($rin, undef, undef, $read_timeout);
             die "select(2) error, errno = $!" if $nfound == -1;
-            return (0,undef,undef, Hijk::Error::READ_TIMEOUT) unless $nfound == 1;
+            return (undef,0,undef,undef, Hijk::Error::READ_TIMEOUT) unless $nfound == 1;
         }
 
         $nbytes = POSIX::read($fd, $buf, $block_size);
@@ -37,10 +37,13 @@ sub fetch {
             $block_size -= $nbytes;
         }
         else {
-            my $neck_pos = index($buf, "${CRLF}${CRLF}");
+            $head .= $buf;
+            my $neck_pos = index($head, "${CRLF}${CRLF}");
             if ($neck_pos > 0) {
                 $decapitated = 1;
-                $head .= substr($buf, 0, $neck_pos);
+                $body = substr($head, $neck_pos+4);
+                $head = substr($head, 0, $neck_pos);
+                $proto = substr($head, 0, 8);
                 $status_code = substr($head, 9, 3);
                 substr($head, 0, index($head, $CRLF) + 2, ""); # 2 = length($CRLF)
 
@@ -50,22 +53,17 @@ sub fetch {
                 }
 
                 if ($header->{'Content-Length'}) {
-                    $body = substr($buf, $neck_pos + 4); # 4 = length("${CRLF}${CRLF}")
                     $block_size = $header->{'Content-Length'} - length($body);
                 }
                 else {
                     $block_size = 0;
-                    $body = "";
                 }
-            }
-            else {
-                $head = $buf;
             }
         }
 
     } while( !$decapitated || $block_size > 0 );
 
-    return ($status_code, $body, $header);
+    return ($proto, $status_code, $body, $header);
 }
 
 sub construct_socket {
@@ -147,7 +145,7 @@ sub request {
         die "send error ($r) $!";
     }
 
-    my ($status,$body,$head,$error) = eval {
+    my ($proto,$status,$body,$head,$error) = eval {
         fetch(fileno($soc), (($args->{read_timeout} || 0) * 1000));
     } or do {
         my $err = $@ || "zombie error";
@@ -156,11 +154,12 @@ sub request {
         die $err;
     };
 
-    if ($status == 0 || ($head->{Connection} && $head->{Connection} eq 'close')) {
+    if ($status == 0 || $proto eq 'HTTP/1.0' || ($head->{Connection} && $head->{Connection} eq 'close')) {
         delete $args->{socket_cache}->{$cache_key} if defined $cache_key;
         shutdown($soc, 2);
     }
     return {
+        proto => $proto,
         status => $status,
         head => $head,
         body => $body,
