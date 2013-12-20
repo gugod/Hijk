@@ -37,10 +37,12 @@ sub fetch {
             $block_size -= $nbytes;
         }
         else {
-            my $neck_pos = index($buf, "${CRLF}${CRLF}");
+            $head .= $buf;
+            my $neck_pos = index($head, "${CRLF}${CRLF}");
             if ($neck_pos > 0) {
                 $decapitated = 1;
-                $head .= substr($buf, 0, $neck_pos);
+                $body = substr($head, $neck_pos+4);
+                $head = substr($head, 0, $neck_pos);
                 $status_code = substr($head, 9, 3);
                 substr($head, 0, index($head, $CRLF) + 2, ""); # 2 = length($CRLF)
 
@@ -50,16 +52,11 @@ sub fetch {
                 }
 
                 if ($header->{'Content-Length'}) {
-                    $body = substr($buf, $neck_pos + 4); # 4 = length("${CRLF}${CRLF}")
                     $block_size = $header->{'Content-Length'} - length($body);
                 }
                 else {
                     $block_size = 0;
-                    $body = "";
                 }
-            }
-            else {
-                $head = $buf;
             }
         }
 
@@ -384,6 +381,8 @@ unexpectedly going away etc.
 =item Ævar Arnfjörð Bjarmason <avar@cpan.org>
 
 =item Borislav Nikolov <jack@sofialondonmoskva.com>
+
+=item Damian Gryski <damian@gryski.com>
 
 =back
 
