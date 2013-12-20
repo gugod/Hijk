@@ -12,8 +12,8 @@ sub Hijk::Error::TIMEOUT         () { Hijk::Error::READ_TIMEOUT() | Hijk::Error:
 # sub Hijk::Error::WHATEVER      () { 1 << 2 } # 4
 
 sub fetch {
-    my $fd = shift || die "need file descriptor";
-    my ($read_timeout,$block_size,$header,$head,$body,$buf,$decapitated,$nfound,$nbytes,$proto) = (shift,10240,{},"");
+    my ($fd, $read_timeout,$block_size,$header,$head) = (shift,shift,10240,{},"");
+    my ($body,$buf,$decapitated,$nfound,$nbytes,$proto);
     my $status_code = 0;
     $read_timeout /= 1000 if defined $read_timeout;
     vec(my $rin = '', $fd, 1) = 1;
