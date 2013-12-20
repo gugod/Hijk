@@ -81,7 +81,7 @@ sub construct_socket {
             vec(my $w = '', fileno($soc), 1) = 1;
             my $n = select(undef, $w, undef, $connect_timeout);
             unless ($n) {
-                return (undef, { error => Hijk::Error::CONNECT_TIMEOUT });
+                return (undef, Hijk::Error::CONNECT_TIMEOUT);
             }
 
             die "select(2) error, errno = $!" if $n < 0;
@@ -132,7 +132,7 @@ sub request {
         $soc = $args->{socket_cache}->{$cache_key};
     } else {
         ($soc, my $error) = construct_socket(@$args{qw(host port connect_timeout)});
-        return $error if defined $error; # To maybe return the CONNECT_TIMEOUT
+        return {error => $error} if defined $error; # To maybe return the CONNECT_TIMEOUT
         $args->{socket_cache}->{$cache_key} = $soc if defined $cache_key;
         $args->{on_connect}->() if exists $args->{on_connect};
     }
