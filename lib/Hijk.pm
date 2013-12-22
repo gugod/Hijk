@@ -15,7 +15,6 @@ sub fetch {
     my ($fd, $read_timeout,$block_size,$header,$head) = (shift,shift,10240,{},"");
     my ($body,$buf,$decapitated,$nfound,$nbytes,$proto);
     my $status_code = 0;
-    $read_timeout /= 1000 if defined $read_timeout;
     vec(my $rin = '', $fd, 1) = 1;
     do {
         if ($read_timeout) {
@@ -146,7 +145,7 @@ sub request {
     }
 
     my ($proto,$status,$body,$head,$error) = eval {
-        fetch(fileno($soc), (($args->{read_timeout} || 0) * 1000));
+        fetch(fileno($soc), $args->{read_timeout});
     } or do {
         my $err = $@ || "zombie error";
         delete $args->{socket_cache}->{$cache_key} if defined $cache_key;
