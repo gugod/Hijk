@@ -235,12 +235,12 @@ Most of HTTP features like proxy, redirect, Transfer-Encoding, or SSL are not
 supported at all. For those requirements we already have many good HTTP clients
 like L<HTTP::Tiny>, L<Furl> or L<LWP::UserAgent>.
 
-=head1 FUNCTIONS
 
-=head2 Hijk::request( $args :HashRef ) :HashRef
+=head1 FUNCTION: Hijk::request( $args :HashRef ) :HashRef
 
-This is the only function to be used. It is not exported to its caller namespace
-at all. It takes a request arguments in HashRef and returns the response in HashRef.
+C<Hijk::request> is the only function to be used. It is not exported to its
+caller namespace at all. It takes a request arguments in HashRef and returns the
+response in HashRef.
 
 The C<$args> request arg should be a HashRef containing key-value pairs from the
 following list. The value for C<host> and C<port> are mandatory and others are
@@ -313,19 +313,11 @@ cache. To completely disable the cache pass in C<undef>.
 The return vaue is a HashRef representing a response. It contains the following
 key-value pairs.
 
-=over 4
-
-=item proto => :Str
-
-=item status => :StatusCode
-
-=item body => :Str
-
-=item head => :HashRef
-
-=item error => :Int
-
-=back
+    proto  => :Str
+    status => :StatusCode
+    body   => :Str
+    head   => :HashRef
+    error  => :Int
 
 For example, to send request to C<http://example.com/flower?color=red>, use the
 following code:
@@ -349,9 +341,11 @@ Users should keep this in mind when using Hijk.
 Noticed that the C<head> in the response is a HashRef rather then an ArrayRef.
 This makes it easier to retrieve specific header fields.
 
-We currently don't support returning a body without a Content-Length
-header, bodies B<MUST> have an accompanying Content-Length or we won't
-pick them up.
+We currently don't support server that does not return a http body without a
+Content-Length header, bodies B<MUST> have an accompanying Content-Length or we
+won't pick them up.
+
+=head1 ERROR CODES
 
 If we had an error we'll include an "error" key whose value is a
 bitfield that you can check against Hijk::Error::* constants. Those
@@ -377,12 +371,11 @@ Instead of the more verbose:
 
     .. if exists $res->{error} and $res->{error} & (Hijk::Error::CONNECT_TIMEOUT | Hijk::Error::READ_TIMEOUT)
 
-Hijk C<WILL> call die if any system calls that it executes fail with
-errors that aren't covered by C<Hijk::Error::*>, so wrap it in an
-C<eval> if you don't want to die in those cases. We just provide
-C<Hijk::Error::*> for non-exceptional failures like timeouts, not for
-e.g. you trying to connect to a host that doesn't exist or a socket
-unexpectedly going away etc.
+Hijk C<WILL> call die if any system calls that it executes fail with errors that
+aren't covered by C<Hijk::Error::*>, so wrap it in an C<eval> if you don't want
+to die in those cases. We just provide C<Hijk::Error::*> for non-exceptional
+failures like timeouts, not for e.g. you trying to connect to a host that
+doesn't exist or a socket unexpectedly going away etc.
 
 =head1 AUTHORS
 
