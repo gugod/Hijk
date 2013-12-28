@@ -7,6 +7,7 @@
   speaking HTTP/1.0.
 - Document that what the socket_cache is keyed on, for anyone wanting
   to implement a tied hash or whatever.
+- Fix a minor bug causing redundant work under "socket_cache => undef"
 
 0.10: # 2013-12-19T16:50:00+0100
 - We can now talk HTTP/1.0 an addition to HTTP/1.1, have a way to

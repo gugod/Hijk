@@ -127,7 +127,7 @@ sub request {
 
     # Use $; so we can use the $socket_cache->{$$, $host, $port}
     # idiom to access the cache.
-    my $cache_key; $cache_key = join($;, $$, @$args{qw(host port)}) if exists $args->{socket_cache};
+    my $cache_key; $cache_key = join($;, $$, @$args{qw(host port)}) if defined $args->{socket_cache};
 
     my $soc;
     if (defined $cache_key and exists $args->{socket_cache}->{$cache_key}) {
