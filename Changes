@@ -5,6 +5,8 @@
   you can see what the protocol the server was using to speak to
   us. Also we pro-actively connections to servers that claim they're
   speaking HTTP/1.0.
+- Document that what the socket_cache is keyed on, for anyone wanting
+  to implement a tied hash or whatever.
 
 0.10: # 2013-12-19T16:50:00+0100
 - We can now talk HTTP/1.0 an addition to HTTP/1.1, have a way to

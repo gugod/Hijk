@@ -124,7 +124,10 @@ sub request {
     # Ditto for providing a default socket cache, allow for setting it
     # to "socket_cache => undef" to disable the cache.
     $args->{socket_cache} = $SOCKET_CACHE unless exists $args->{socket_cache};
-    my $cache_key; $cache_key = "$args->{host};$args->{port};$$" if exists $args->{socket_cache};
+
+    # Use $; so we can use the $socket_cache->{$$, $host, $port}
+    # idiom to access the cache.
+    my $cache_key; $cache_key = join($;, $$, @$args{qw(host port)}) if exists $args->{socket_cache};
 
     my $soc;
     if (defined $cache_key and exists $args->{socket_cache}->{$cache_key}) {
@@ -305,9 +308,10 @@ and keeping open connections down and reducing complexity is more
 important, in those cases you can use C<HTTP/1.0>.
 
 By default we will provide a C<socket_cache> for you which is a global
-singleton that we maintain keyed on host/port/pid. Alternatively you
-can pass in C<socket_cache> hash of your own which we'll use as the
-cache. To completely disable the cache pass in C<undef>.
+singleton that we maintain keyed on C<join($;, $$, $host, $port)>.
+Alternatively you can pass in C<socket_cache> hash of your own which
+we'll use as the cache. To completely disable the cache pass in
+C<undef>.
 
 The return vaue is a HashRef representing a response. It contains the following
 key-value pairs.
