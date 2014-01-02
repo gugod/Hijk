@@ -225,9 +225,9 @@ escape your values etc.
 
 =head1 DESCRIPTION
 
-Hijk is a specialized HTTP Client that does nothing but transporting the
+Hijk is a specialized HTTP Client that does nothing but transport the
 response body back. It does not feature as a "user agent", but as a dumb
-client. It is suitble for connecting to data servers transporting via HTTP
+client. It is suitable for connecting to data servers transporting via HTTP
 rather then web servers.
 
 Most of HTTP features like proxy, redirect, Transfer-Encoding, or SSL are not
@@ -258,7 +258,7 @@ optional with default values listed below
     socket_cache    => {}, # (undef to disable, or \my %your_socket_cache)
     on_connect      => undef, # (or sub { ... })
 
-Too keep the implementation minimal, Hijk does not take full URL string as
+To keep the implementation minimal, Hijk does not take full URL string as
 input. User who need to parse URL string could use L<URI> modules.
 
 The value of C<head> is an ArrayRef of key-value pairs instead of HashRef, this way
@@ -274,7 +274,7 @@ the order of headers can be maintained. For example:
     Content-Type: application/json
     X-Requested-With: Hijk
 
-Again, there are no extra character-escaping filter within Hijk.
+Again, there are no extra character-escaping filters within Hijk.
 
 The value of C<connect_timeout> or C<read_timeout> is in seconds, and
 is used as the time limit for connecting to the host, and reading from
@@ -289,7 +289,7 @@ The optional C<on_connect> callback is intended to be used for you to
 figure out from production traffic what you should set the
 C<connect_timeout>. I.e. you can start a timer when you call
 C<Hijk::request()> that you end when C<on_connect> is called, that's
-how long is took us to get a connection, if you start another timer in
+how long it took us to get a connection. If you start another timer in
 that callback that you end when C<Hijk::request()> returns to you
 that'll give you how long it took to send/receive data after we
 constructed the socket, i.e. it'll help you to tweak your
@@ -333,7 +333,7 @@ Notice that you do not need to put the leading C<"?"> character in the
 C<query_string>. You do, however, need to propery C<uri_escape> the content of
 C<query_string>.
 
-All values are assumed to be valid. Hijk simply passthru the values without
+All values are assumed to be valid. Hijk simply passes the values through without
 validating the content. It is possible that it constructs invalid HTTP Messages.
 Users should keep this in mind when using Hijk.
 
