@@ -1,4 +1,4 @@
-0.12:
+0.12: # 2014-01-31T18:20:00+0100
 - Instead of dying on e.g. "Bad arg length for
   Socket::pack_sockaddr_in, length is 0, should be 4" when given a
   host we can't resolve we'll now return a $res with the error value
