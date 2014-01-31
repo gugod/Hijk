@@ -2,14 +2,15 @@ package Hijk;
 use strict;
 use warnings;
 use POSIX qw(EINPROGRESS);
-use Socket qw(PF_INET SOCK_STREAM sockaddr_in inet_aton $CRLF);
+use Socket qw(PF_INET SOCK_STREAM pack_sockaddr_in inet_ntoa $CRLF);
 use Fcntl qw(F_GETFL F_SETFL O_NONBLOCK);
 our $VERSION = "0.11";
 
 sub Hijk::Error::CONNECT_TIMEOUT () { 1 << 0 } # 1
 sub Hijk::Error::READ_TIMEOUT    () { 1 << 1 } # 2
 sub Hijk::Error::TIMEOUT         () { Hijk::Error::READ_TIMEOUT() | Hijk::Error::CONNECT_TIMEOUT() } # 3
-# sub Hijk::Error::WHATEVER      () { 1 << 2 } # 4
+sub Hijk::Error::CANNOT_RESOLVE  () { 1 << 2 } # 4
+#sub Hijk::Error::WHATEVER       () { 1 << 3 } # 8
 
 sub fetch {
     my ($fd, $read_timeout,$block_size,$header,$head) = (shift,shift,10240,{},"");
@@ -67,6 +68,16 @@ sub fetch {
 
 sub construct_socket {
     my ($host, $port, $connect_timeout) = @_;
+
+    # If we can't find the IP address there'll be no point in even
+    # setting up a socket.
+    my $addr;
+    {
+        my $inet_aton = gethostbyname($host);
+        return (undef, Hijk::Error::CANNOT_RESOLVE) unless defined $inet_aton;
+        $addr = pack_sockaddr_in($port, $inet_aton);
+    }
+
     my $soc;
     socket($soc, PF_INET, SOCK_STREAM, getprotobyname('tcp')) || die "Failed to construct TCP socket: $!";
     my $flags;
@@ -74,7 +85,6 @@ sub construct_socket {
         $flags = fcntl($soc, F_GETFL, 0) or die "Failed to set fcntl F_GETFL flag for socket connect timeout (before connection): $!";
         fcntl($soc, F_SETFL, $flags | O_NONBLOCK) or die "Failed to set fcntl O_NONBLOCK flag for socket connect timeout: $!";
     }
-    my $addr = sockaddr_in($port, inet_aton($host));
     connect($soc, $addr) or do {
         if ($! == EINPROGRESS) {
             vec(my $w = '', fileno($soc), 1) = 1;
@@ -362,6 +372,8 @@ are:
 
 =item Hijk::Error::TIMEOUT
 
+=item Hijk::Error::CANNOT_RESOLVE
+
 =back
 
 The Hijk::Error::TIMEOUT constant is the same as
@@ -373,6 +385,9 @@ there for convenience so you can do:
 Instead of the more verbose:
 
     .. if exists $res->{error} and $res->{error} & (Hijk::Error::CONNECT_TIMEOUT | Hijk::Error::READ_TIMEOUT)
+
+We'll return Hijk::Error::CANNOT_RESOLVE if we can't
+C<gethostbyname()> the host you've provided.
 
 Hijk C<WILL> call die if any system calls that it executes fail with errors that
 aren't covered by C<Hijk::Error::*>, so wrap it in an C<eval> if you don't want

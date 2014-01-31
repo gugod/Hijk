@@ -1,3 +1,11 @@
+0.12:
+- Instead of dying on e.g. "Bad arg length for
+  Socket::pack_sockaddr_in, length is 0, should be 4" when given a
+  host we can't resolve we'll now return a $res with the error value
+  set to Hijk::Error::CANNOT_RESOLVEif we can't gethostbyname() the
+  provided hostname. Makes it easier to handle DNS resolution
+  failures.
+
 0.11: # 2014-01-06T13:20:00+0100
 - Fixed broken HTTP header parsing for servers that didn't return the
   entire header all at the same time, but in chunks.
