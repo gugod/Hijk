@@ -1,5 +1,6 @@
 #!/usr/bin/env perl
 use strict;
+use warnings;
 use Test::More;
 use File::Temp ();
 use File::Temp qw/ :seekable /;

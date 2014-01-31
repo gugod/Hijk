@@ -1,5 +1,6 @@
 #!/usr/bin/env perl
 use strict;
+use warnings;
 use Time::HiRes qw(sleep time);
 use Plack::Request;
 sub {
