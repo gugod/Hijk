@@ -12,7 +12,7 @@ sub Hijk::Error::TIMEOUT         () { Hijk::Error::READ_TIMEOUT() | Hijk::Error:
 sub Hijk::Error::CANNOT_RESOLVE  () { 1 << 2 } # 4
 #sub Hijk::Error::WHATEVER       () { 1 << 3 } # 8
 
-sub fetch {
+sub read_http_message {
     my ($fd, $read_timeout,$block_size,$header,$head) = (shift,shift,10240,{},"");
     my ($body,$buf,$decapitated,$nfound,$nbytes,$proto);
     my $status_code = 0;
@@ -158,7 +158,7 @@ sub request {
     }
 
     my ($proto,$status,$body,$head,$error) = eval {
-        fetch(fileno($soc), $args->{read_timeout});
+        read_http_message(fileno($soc), $args->{read_timeout});
     } or do {
         my $err = $@ || "zombie error";
         delete $args->{socket_cache}->{$cache_key} if defined $cache_key;
