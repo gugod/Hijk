@@ -323,7 +323,7 @@ Alternatively you can pass in C<socket_cache> hash of your own which
 we'll use as the cache. To completely disable the cache pass in
 C<undef>.
 
-The return vaue is a HashRef representing a response. It contains the following
+The return value is a HashRef representing a response. It contains the following
 key-value pairs.
 
     proto  => :Str
@@ -344,7 +344,7 @@ following code:
     die "Response is not OK" unless $res->{status} ne "200";
 
 Notice that you do not need to put the leading C<"?"> character in the
-C<query_string>. You do, however, need to propery C<uri_escape> the content of
+C<query_string>. You do, however, need to properly C<uri_escape> the content of
 C<query_string>.
 
 All values are assumed to be valid. Hijk simply passes the values through without
