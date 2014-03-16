@@ -1,7 +1,7 @@
 package Hijk;
 use strict;
 use warnings;
-use POSIX qw(EINPROGRESS);
+use POSIX qw(:errno_h);
 use Socket qw(PF_INET SOCK_STREAM pack_sockaddr_in inet_ntoa $CRLF);
 use Fcntl qw(F_GETFL F_SETFL O_NONBLOCK);
 use Time::HiRes qw(time);
@@ -42,7 +42,7 @@ sub read_http_message {
         my $nbytes = POSIX::read($fd, $buf, $block_size);
         if (!defined($nbytes)) {
             next
-                if ($! == POSIX::EWOULDBLOCK || $! == POSIX::EAGAIN);
+                if ($! == EWOULDBLOCK || $! == EAGAIN);
             die "Failed to read http " .( $decapitated ? "body": "head" ). " from socket. errno = $!"
         }
 
@@ -173,7 +173,7 @@ sub request {
         my $rc = syswrite($soc,$r,$left, $total - $left);
         if (!defined($rc)) {
             next
-                if ($! == POSIX::EWOULDBLOCK || $! == POSIX::EAGAIN);
+                if ($! == EWOULDBLOCK || $! == EAGAIN);
 
             delete $args->{socket_cache}->{$cache_key} if defined $cache_key;
             shutdown($soc, 2);
