@@ -41,7 +41,7 @@ sub read_http_message {
 
         my $nbytes = POSIX::read($fd, $buf, $block_size);
         if (!defined($nbytes)) {
-            continue
+            next
                 if ($! == POSIX::EWOULDBLOCK || $! == POSIX::EAGAIN);
             die "Failed to read http " .( $decapitated ? "body": "head" ). " from socket. errno = $!"
         }
@@ -172,7 +172,7 @@ sub request {
 
         my $rc = syswrite($soc,$r,$left, $total - $left);
         if (!defined($rc)) {
-            continue
+            next
                 if ($! == POSIX::EWOULDBLOCK || $! == POSIX::EAGAIN);
 
             delete $args->{socket_cache}->{$cache_key} if defined $cache_key;
