@@ -39,7 +39,7 @@ sub read_http_message {
     vec(my $rin = '', $fd, 1) = 1;
     do {
         my $nfound = select($rin, undef, undef, $read_timeout);
-        $read_timeout -= clock_gettime(CLOCK_MONOTONIC()) - $start if defined($start);
+        $read_timeout -= clock_gettime(CLOCK_MONOTONIC()) - $start if HAS_CLOCK_MONOTONIC && defined($start);
 
         return (undef,0,undef,undef, Hijk::Error::READ_TIMEOUT)
             if ($nfound != 1 || (defined($read_timeout) && $read_timeout <= 0));
