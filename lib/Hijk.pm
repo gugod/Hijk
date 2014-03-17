@@ -34,8 +34,7 @@ sub read_http_message {
     $read_timeout = selectable_timeout($read_timeout);
     my ($body,$buf,$decapitated,$nbytes,$proto);
     my $status_code = 0;
-    my $start = undef;
-    $start = clock_gettime(CLOCK_MONOTONIC()) if HAS_CLOCK_MONOTONIC && defined($read_timeout);
+    my $start; $start = clock_gettime(CLOCK_MONOTONIC()) if HAS_CLOCK_MONOTONIC && defined($read_timeout);
     vec(my $rin = '', $fd, 1) = 1;
     do {
         my $nfound = select($rin, undef, undef, $read_timeout);
