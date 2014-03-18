@@ -40,7 +40,7 @@ lives_ok {
 is(scalar(keys %{$Hijk::SOCKET_CACHE}), 0, "We have nothing in the socket cache after a timeout");
 
 
-if($ENV{http_proxy}) {
+unless ($ENV{http_proxy}) {
     lives_ok {
         my $res = Hijk::request({
             host => 'google.com',
