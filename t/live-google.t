@@ -22,6 +22,47 @@ my %args = (
     method => "GET",
 );
 
+subtest "timeout and cache" => sub {
+    lives_ok {
+        my $res = Hijk::request({
+            host => 'google.com',
+            port => 80,
+            timeout => 0
+        });
+
+        ok !exists($res->{error}), '$res->{error} does not exist, because we do not expect connect timeout to happen';
+        cmp_ok scalar(keys %{$Hijk::SOCKET_CACHE}), '==', 1, "We have an entry in the global socket cache";
+        %{$Hijk::SOCKET_CACHE} = ();
+    } "We could make the request";
+
+    lives_ok {
+        my %socket_cache;
+        my $res = Hijk::request({
+            host => 'google.com',
+            port => 80,
+            timeout => 0,
+            socket_cache => \%socket_cache,
+        });
+
+        ok !exists($res->{error}), '$res->{error} does not exist, because we do not expect connect timeout to happen';
+        cmp_ok scalar(keys %{$Hijk::SOCKET_CACHE}), '==', 0, "We have nothing in the global socket cache...";
+        cmp_ok scalar(keys %socket_cache), '==', 1, "...because we used our own cache";
+    } "We could make the request";
+
+    lives_ok {
+        my %socket_cache;
+        my $res = Hijk::request({
+            host => 'google.com',
+            port => 80,
+            timeout => 0,
+            socket_cache => undef,
+        });
+
+        ok !exists($res->{error}), '$res->{error} does not exist, because we do not expect connect timeout to happen';
+        cmp_ok scalar(keys %{$Hijk::SOCKET_CACHE}), '==', 0, "We have nothing in the global socket cache";
+    } "We could make the request";
+};
+
 subtest "with 1ms timeout limit, expect an exception." => sub {
     lives_ok {
         my $res = Hijk::request({%args, timeout => 0.001});
@@ -31,9 +72,10 @@ subtest "with 1ms timeout limit, expect an exception." => sub {
     };
 };
 
-subtest "with 1s timeout limit, do not expect an exception." => sub {
+subtest "with 10s timeout limit, do not expect an exception." => sub {
     lives_ok {
         my $res = Hijk::request({%args, timeout => 10});
+        diag substr($res->{body}, 0, 80);
     } 'google.com send back something within 10s';
 };
 
