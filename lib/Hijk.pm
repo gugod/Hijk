@@ -2,7 +2,7 @@ package Hijk;
 use strict;
 use warnings;
 use POSIX qw(:errno_h);
-use Socket qw(PF_INET SOCK_STREAM pack_sockaddr_in inet_ntoa $CRLF);
+use Socket qw(PF_INET SOCK_STREAM pack_sockaddr_in inet_ntoa $CRLF SOL_SOCKET SO_ERROR);
 use Fcntl qw(F_GETFL F_SETFL O_NONBLOCK);
 our $VERSION = "0.13";
 
@@ -85,8 +85,9 @@ sub construct_socket {
         $addr = pack_sockaddr_in($port, $inet_aton);
     }
 
+    my $tcp_proto = getprotobyname("tcp");
     my $soc;
-    socket($soc, PF_INET, SOCK_STREAM, getprotobyname('tcp')) || die "Failed to construct TCP socket: $!";
+    socket($soc, PF_INET, SOCK_STREAM, $tcp_proto) || die "Failed to construct TCP socket: $!";
     my $flags = fcntl($soc, F_GETFL, 0) or die "Failed to set fcntl F_GETFL flag: $!";
     fcntl($soc, F_SETFL, $flags | O_NONBLOCK) or die "Failed to set fcntl O_NONBLOCK flag: $!";
 
@@ -104,6 +105,11 @@ sub construct_socket {
             die "select() error on constructing the socket: $!";
         }
     }
+
+    if ($! = unpack("L", getsockopt($soc, SOL_SOCKET, SO_ERROR))) {
+        return (undef, Hijk::Error::CONNECT_TIMEOUT);
+    }
+
     return $soc;
 }
 
@@ -168,7 +174,6 @@ sub request {
         my $rc = syswrite($soc,$r,$left, $total - $left);
         if (!defined($rc)) {
             next if ($! == EWOULDBLOCK || $! == EAGAIN);
-
             delete $args->{socket_cache}->{$cache_key} if defined $cache_key;
             shutdown($soc, 2);
             die "send error ($r) $!";
