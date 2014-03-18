@@ -4,18 +4,6 @@ use warnings;
 use POSIX qw(:errno_h);
 use Socket qw(PF_INET SOCK_STREAM pack_sockaddr_in inet_ntoa $CRLF);
 use Fcntl qw(F_GETFL F_SETFL O_NONBLOCK);
-use Time::HiRes qw(time clock_gettime);
-use constant ();
-BEGIN {
-    my $has_CLOCK_MONOTONIC;
-    eval {
-        die "disabled for testing" if $ENV{HIJK_TEST_NO_CLOCK_MONOTONIC};
-        Time::HiRes->import(qw(CLOCK_MONOTONIC));
-        $has_CLOCK_MONOTONIC = 1;
-    };
-    constant->import(HAS_CLOCK_MONOTONIC => $has_CLOCK_MONOTONIC ? 1 : 0);
-}
-
 our $VERSION = "0.13";
 
 sub Hijk::Error::CONNECT_TIMEOUT () { 1 << 0 } # 1
@@ -34,11 +22,9 @@ sub read_http_message {
     $read_timeout = selectable_timeout($read_timeout);
     my ($body,$buf,$decapitated,$nbytes,$proto);
     my $status_code = 0;
-    my $start; $start = clock_gettime(CLOCK_MONOTONIC()) if HAS_CLOCK_MONOTONIC && defined($read_timeout);
     vec(my $rin = '', $fd, 1) = 1;
     do {
         my $nfound = select($rin, undef, undef, $read_timeout);
-        $read_timeout -= clock_gettime(CLOCK_MONOTONIC()) - $start if HAS_CLOCK_MONOTONIC && defined($start);
 
         return (undef,0,undef,undef, Hijk::Error::READ_TIMEOUT)
             if ($nfound != 1 || (defined($read_timeout) && $read_timeout <= 0));
@@ -162,11 +148,9 @@ sub request {
 
     vec(my $rout = '', fileno($soc), 1) = 1;
     my $connect_timeout = selectable_timeout($args->{connect_timeout});
-    my $start; $start = clock_gettime(CLOCK_MONOTONIC()) if HAS_CLOCK_MONOTONIC && defined($connect_timeout);
 
     while ($left > 0) {
         my $nfound = select(undef,$rout, undef, $connect_timeout);
-        $connect_timeout -= clock_gettime(CLOCK_MONOTONIC()) - $start if HAS_CLOCK_MONOTONIC and defined($start);
 
         if ($nfound != 1 || (defined($connect_timeout) && $connect_timeout <= 0)) {
             delete $args->{socket_cache}->{$cache_key} if defined $cache_key;
