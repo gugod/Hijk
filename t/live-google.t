@@ -12,6 +12,10 @@ unless ($ENV{TEST_LIVE}) {
     plan skip_all => "Enable live testing by setting env: TEST_LIVE=1";
 }
 
+if($ENV{http_proxy}) {
+    plan skip_all => "http_proxy is set. We cannot test when proxy is required to visit google.com";
+}
+
 my %args = (
     host => "google.com",
     port => "80",
