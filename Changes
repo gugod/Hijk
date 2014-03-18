@@ -1,3 +1,7 @@
+- Switch to use non-blocknig fd to avoid a rare deadlock situation
+  when select() is successful and the following read() blocks forever
+  because there are really nothing to read.
+
 0.12: # 2014-01-31T18:20:00+0100
 - Instead of dying on e.g. "Bad arg length for
   Socket::pack_sockaddr_in, length is 0, should be 4" when given a
