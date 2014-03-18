@@ -74,7 +74,7 @@ sub read_http_message {
 }
 
 sub construct_socket {
-    my ($host, $port) = @_;
+    my ($host, $port, $connect_timeout) = @_;
 
     # If we can't find the IP address there'll be no point in even
     # setting up a socket.
@@ -94,6 +94,16 @@ sub construct_socket {
         die "Failed to connect $!";
     }
 
+    $connect_timeout = selectable_timeout( $connect_timeout );
+    vec(my $rout = '', fileno($soc), 1) = 1;
+    my $nfound = select(undef, $rout, undef, $connect_timeout);
+    if ($nfound != 1) {
+        if (defined($connect_timeout)) {
+            return (undef, Hijk::Error::CONNECT_TIMEOUT);
+        } else {
+            die "select() error on constructing the socket: $!";
+        }
+    }
     return $soc;
 }
 
@@ -136,7 +146,7 @@ sub request {
     if (defined $cache_key and exists $args->{socket_cache}->{$cache_key}) {
         $soc = $args->{socket_cache}->{$cache_key};
     } else {
-        ($soc, my $error) = construct_socket(@$args{qw(host port)});
+        ($soc, my $error) = construct_socket(@$args{qw(host port connect_timeout)});
         return {error => $error} if defined $error;
         $args->{socket_cache}->{$cache_key} = $soc if defined $cache_key;
         $args->{on_connect}->() if exists $args->{on_connect};
@@ -147,27 +157,24 @@ sub request {
     my $left = $total;
 
     vec(my $rout = '', fileno($soc), 1) = 1;
-    my $connect_timeout = selectable_timeout($args->{connect_timeout});
-
     while ($left > 0) {
-        my $nfound = select(undef,$rout, undef, $connect_timeout);
+        my $nfound = select(undef, $rout, undef, undef);
 
-        if ($nfound != 1 || (defined($connect_timeout) && $connect_timeout <= 0)) {
+        if ($nfound != 1) {
             delete $args->{socket_cache}->{$cache_key} if defined $cache_key;
-            return { error => Hijk::Error::CONNECT_TIMEOUT }
+            die "select() error before write(): $!";
         }
 
         my $rc = syswrite($soc,$r,$left, $total - $left);
         if (!defined($rc)) {
-            next
-                if ($! == EWOULDBLOCK || $! == EAGAIN);
+            next if ($! == EWOULDBLOCK || $! == EAGAIN);
 
             delete $args->{socket_cache}->{$cache_key} if defined $cache_key;
             shutdown($soc, 2);
             die "send error ($r) $!";
         }
         $left -= $rc;
-    };
+    }
 
     my ($proto,$status,$body,$head,$error) = eval {
         read_http_message(fileno($soc), $args->{read_timeout});
