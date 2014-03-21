@@ -27,16 +27,28 @@ if ($iter == 0) {
 
 pass "ip generated = $ip";
 
-lives_ok {
-    my $res = Hijk::request({
+my ($res, $exception);
+
+eval {
+    $res = Hijk::request({
         host => $ip,
         port => 80,
-        timeout => 1            # seconds
+        timeout => 1 # seconds
     });
+    1;
+}
+or do {
+    $exception = $@ || "unknown error.";
+    $exception =~ s/\n//g;
+};
 
-    ok exists $res->{error}, '$res->{error} exists because we expect error to happen.';
+if ($exception) {
+    pass "On $^O, we have exception trying to connect to an unreachable IP: $exception";
+    is(scalar(keys %{$Hijk::SOCKET_CACHE}), 0, "We have nothing in the socket cache after the connect exception.");
+} else {
+    ok exists $res->{error}, "On $^O, ".'$res->{error} exists because we expect error to happen.';
     is $res->{error}, Hijk::Error::CONNECT_TIMEOUT, '$res->{error} contiain the value of Hijk::Error::CONNECT_TIMEOUT, indicating that it timed-out when establishing connection';
-} "We could make the request";
-is(scalar(keys %{$Hijk::SOCKET_CACHE}), 0, "We have nothing in the socket cache after a timeout");
+    is(scalar(keys %{$Hijk::SOCKET_CACHE}), 0, "We have nothing in the socket cache after a timeout");
+}
 
 done_testing;

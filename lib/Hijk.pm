@@ -107,7 +107,7 @@ sub construct_socket {
     }
 
     if ($! = unpack("L", getsockopt($soc, SOL_SOCKET, SO_ERROR))) {
-        return (undef, Hijk::Error::CONNECT_TIMEOUT);
+        die $!;
     }
 
     return $soc;
