@@ -22,14 +22,15 @@ sub read_http_message {
     $read_timeout = selectable_timeout($read_timeout);
     my ($body,$buf,$decapitated,$nbytes,$proto);
     my $status_code = 0;
+    my $no_content_len = 0;
     vec(my $rin = '', $fd, 1) = 1;
     do {
         my $nfound = select($rin, undef, undef, $read_timeout);
-
         return (undef,0,undef,undef, Hijk::Error::READ_TIMEOUT)
             if ($nfound != 1 || (defined($read_timeout) && $read_timeout <= 0));
 
         my $nbytes = POSIX::read($fd, $buf, $block_size);
+        goto end if $no_content_len && $decapitated && (!defined($nbytes) || $nbytes == 0);
         if (!defined($nbytes)) {
             next
                 if ($! == EWOULDBLOCK || $! == EAGAIN);
@@ -41,7 +42,9 @@ sub read_http_message {
 
         if ($decapitated) {
             $body .= $buf;
-            $block_size -= $nbytes;
+            if (!$no_content_len) {
+                $block_size -= $nbytes;
+            }
         }
         else {
             $head .= $buf;
@@ -59,18 +62,68 @@ sub read_http_message {
                     $header->{$key} = $value;
                 }
 
+                if ($header->{'Transfer-Encoding'} && $header->{'Transfer-Encoding'} eq 'chunked') {
+                    # if there is chunked encoding we have to ignore content lenght even if we have it
+                    return ($proto, $status_code, read_chunked_body($body, $fd, $read_timeout), $header);
+                }
+
                 if ($header->{'Content-Length'}) {
                     $block_size = $header->{'Content-Length'} - length($body);
                 }
                 else {
-                    $block_size = 0;
+                    $block_size = 10204;
+                    $no_content_len = 1;
                 }
             }
         }
 
-    } while( !$decapitated || $block_size > 0 );
-
+    } while( !$decapitated || $block_size > 0 || $no_content_len);
+  end:
     return ($proto, $status_code, $body, $header);
+}
+
+sub read_chunked_body {
+    my ($buf,$fd, $read_timeout) = @_;
+    my $chunk_size   = 0;
+    my $body         = "";
+    my $block_size = 10240;
+    vec(my $rin = '', $fd, 1) = 1;
+
+    while(1) {
+        # just read a 10k block and process it until it is consumed
+        if (length($buf) == 0 || length($buf) < $chunk_size) {
+            my $nfound = select($rin, undef, undef, $read_timeout);
+            return (undef,0,undef,undef, Hijk::Error::READ_TIMEOUT)
+                if ($nfound != 1 || (defined($read_timeout) && $read_timeout <= 0));
+            my $current_buf = "";
+            my $nbytes = POSIX::read($fd, $current_buf, $block_size);
+            if (!defined($nbytes)) {
+                next
+                    if ($! == EWOULDBLOCK || $! == EAGAIN);
+                die "Failed to read chunked body from socket. errno = $!"
+            }
+
+            die "Failed to read chunked body from socket. Got 0 bytes back, which shouldn't happen <$buf> <$current_buf>"
+                if $nbytes == 0;
+            $buf .= $current_buf;
+        }
+
+        if ($chunk_size > 0 && length($buf) >= $chunk_size) {
+            $body .= substr($buf, 0, $chunk_size - 2); # our chunk size includes the CRLF
+            $buf = substr($buf, $chunk_size);
+            $chunk_size = 0;
+        } else {
+            my $neck_pos = index($buf, ${CRLF});
+            if ($neck_pos > 0) {
+                $chunk_size = hex(substr($buf, 0, $neck_pos));
+                if ($chunk_size == 0) {
+                    return $body;
+                }
+                $chunk_size += 2;                      # include the final CRLF
+                $buf = substr($buf, $neck_pos + 2);
+            }
+        }
+    }
 }
 
 sub construct_socket {
