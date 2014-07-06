@@ -30,7 +30,8 @@ sub read_http_message {
             if ($nfound != 1 || (defined($read_timeout) && $read_timeout <= 0));
 
         my $nbytes = POSIX::read($fd, $buf, $block_size);
-        goto end if $no_content_len && $decapitated && (!defined($nbytes) || $nbytes == 0);
+        return ($proto, $status_code, $body, $header)
+            if $no_content_len && $decapitated && (!defined($nbytes) || $nbytes == 0);
         if (!defined($nbytes)) {
             next
                 if ($! == EWOULDBLOCK || $! == EAGAIN);
@@ -78,7 +79,6 @@ sub read_http_message {
         }
 
     } while( !$decapitated || $block_size > 0 || $no_content_len);
-  end:
     return ($proto, $status_code, $body, $header);
 }
 
