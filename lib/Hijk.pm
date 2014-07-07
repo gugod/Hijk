@@ -62,14 +62,9 @@ sub read_http_message {
                     my ($key, $value) = split /: /, $_, 2;
                     $header->{$key} = $value;
                 }
-                if ($header->{'Trailer'}) {
-                    # http://tools.ietf.org/html/rfc2616#section-14.40
-                    # for now just die, so we dont leave something in the cached socket
-                    die 'Hijk does not support Trailer header at the moment';
-                }
                 if ($header->{'Transfer-Encoding'} && $header->{'Transfer-Encoding'} eq 'chunked') {
                     # if there is chunked encoding we have to ignore content lenght even if we have it
-                    return ($proto, $status_code, read_chunked_body($body, $fd, $read_timeout), $header);
+                    return ($proto, $status_code, read_chunked_body($body, $fd, $read_timeout,$header), $header);
                 }
 
                 if ($header->{'Content-Length'}) {
@@ -87,12 +82,13 @@ sub read_http_message {
 }
 
 sub read_chunked_body {
-    my ($buf,$fd, $read_timeout) = @_;
+    my ($buf,$fd, $read_timeout,$header) = @_;
     my $chunk_size   = 0;
     my $body         = "";
     my $block_size = 10240;
-    vec(my $rin = '', $fd, 1) = 1;
+    my $trailer_mode  = 0;
 
+    vec(my $rin = '', $fd, 1) = 1;
     while(1) {
         # just read a 10k block and process it until it is consumed
         if (length($buf) == 0 || length($buf) < $chunk_size) {
@@ -111,20 +107,49 @@ sub read_chunked_body {
                 if $nbytes == 0;
             $buf .= $current_buf;
         }
+        if ($trailer_mode) {
+            # http://tools.ietf.org/html/rfc2616#section-14.40
+            # http://tools.ietf.org/html/rfc2616#section-3.6.1
+            #   A server using chunked transfer-coding in a response MUST NOT use the
+            #   trailer for any header fields unless at least one of the following is
+            #   true:
 
-        if ($chunk_size > 0 && length($buf) >= $chunk_size) {
-            $body .= substr($buf, 0, $chunk_size - 2); # our chunk size includes the CRLF
-            $buf = substr($buf, $chunk_size);
-            $chunk_size = 0;
-        } else {
-            my $neck_pos = index($buf, ${CRLF});
+            #   a)the request included a TE header field that indicates "trailers" is
+            #     acceptable in the transfer-coding of the  response, as described in
+            #     section 14.39; or,
+
+            #   b)the server is the origin server for the response, the trailer
+            #     fields consist entirely of optional metadata, and the recipient
+            #     could use the message (in a manner acceptable to the origin server)
+            #     without receiving this metadata.  In other words, the origin server
+            #     is willing to accept the possibility that the trailer fields might
+            #     be silently discarded along the path to the client.
+
+            # in case of trailer mode, we just read everything until the next CRLFCRLF
+            my $neck_pos = index($buf, "${CRLF}${CRLF}");
             if ($neck_pos > 0) {
-                $chunk_size = hex(substr($buf, 0, $neck_pos));
-                if ($chunk_size == 0) {
-                    return $body;
+                return $body;
+            }
+        } else {
+            if ($chunk_size > 0 && length($buf) >= $chunk_size) {
+                $body .= substr($buf, 0, $chunk_size - 2); # our chunk size includes the CRLF
+                $buf = substr($buf, $chunk_size);
+                $chunk_size = 0;
+            } else {
+                my $neck_pos = index($buf, ${CRLF});
+                if ($neck_pos > 0) {
+                    $chunk_size = hex(substr($buf, 0, $neck_pos));
+                    if ($chunk_size == 0) {
+                        if ($header->{Trailer}) {
+                            $trailer_mode = 1;
+                        } else {
+                            return $body;
+                        }
+                    } else {
+                        $chunk_size += 2;                  # include the final CRLF
+                        $buf = substr($buf, $neck_pos + 2);
+                    }
                 }
-                $chunk_size += 2;                      # include the final CRLF
-                $buf = substr($buf, $neck_pos + 2);
             }
         }
     }
