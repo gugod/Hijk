@@ -20,9 +20,12 @@ my $fd = do {
         'Content-Type: text/html',
         'Server: Example',
         'Transfer-Encoding: chunked',
+        'Trailer: Date',
         'non-sence: ' . 'a' x 20000,
         '',
-        $data
+        $data,
+        'Date: Sat, 23 Nov 2013 23:10:28 GMT',
+        ''
     );
     print $fh $msg;
     $fh->flush;
@@ -30,28 +33,8 @@ my $fd = do {
     fileno($fh);
 };
 
-my ($proto, $status, $body, $head) = Hijk::read_http_message($fd);
-
-
-is $status, 200;
-is $body, "Wikipedia in\r\n\r\nchunks.";
-
-is_deeply $head, {
-    "Date" => "Sat, 23 Nov 2013 23:10:28 GMT",
-    "Last-Modified" => "Sat, 26 Oct 2013 19:41:47 GMT",
-    "ETag" => '"4b9d0211dd8a2819866bccff777af225"',
-    "Content-Type" => "text/html",
-    "Server" => "Example",
-    'non-sence' => 'a' x 20000,
-    "Transfer-Encoding" => "chunked",
-};
-
-# fetch again without seeking back
-# this will force select() to return because there are actually
-# 0 bytes to read - so we can simulate connection closed 
-# from the other end of the socket (like expired keep-alive)
 throws_ok {
     my ($proto, $status, $body, $head) = Hijk::read_http_message($fd);
-} qr /0 bytes/i;
+} qr /trailer/i;
 
 done_testing;

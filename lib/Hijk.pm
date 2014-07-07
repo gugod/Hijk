@@ -62,7 +62,11 @@ sub read_http_message {
                     my ($key, $value) = split /: /, $_, 2;
                     $header->{$key} = $value;
                 }
-
+                if ($header->{'Trailer'}) {
+                    # http://tools.ietf.org/html/rfc2616#section-14.40
+                    # for now just die, so we dont leave something in the cached socket
+                    die 'Hijk does not support Trailer header at the moment';
+                }
                 if ($header->{'Transfer-Encoding'} && $header->{'Transfer-Encoding'} eq 'chunked') {
                     # if there is chunked encoding we have to ignore content lenght even if we have it
                     return ($proto, $status_code, read_chunked_body($body, $fd, $read_timeout), $header);
