@@ -29,3 +29,5 @@ notifications:
       - "irc.freenode.org#chupei.pm"
     use_notice: true
 
+git:
+  depth: 1
