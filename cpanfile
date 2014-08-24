@@ -2,3 +2,4 @@ test_requires "Test::More";
 test_requires "Test::Exception";
 test_requires "Plack";
 test_requires "Net::Ping", '2.41';
+test_requires "Time::HiRes";
