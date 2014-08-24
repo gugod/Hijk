@@ -62,7 +62,7 @@ sub read_http_message {
                     my ($key, $value) = split /: /, $_, 2;
                     $header->{$key} = $value;
                 }
-                if (exists($header->{'Transfer-Encoding'}) && $header->{'Transfer-Encoding'} eq 'chunked') {
+                if ($header->{'Transfer-Encoding'} && $header->{'Transfer-Encoding'} eq 'chunked') {
                     # if there is chunked encoding we have to ignore content lenght even if we have it
                     return ($proto, $status_code, read_chunked_body($body, $fd, $read_timeout,$header), $header);
                 }
