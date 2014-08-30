@@ -30,7 +30,7 @@ my $fd = do {
     fileno($fh);
 };
 
-my ($proto, $status, $body, $head) = Hijk::read_http_message($fd,0);
+my ($proto, $status, $head, $body) = Hijk::_read_http_message($fd,0);
 
 
 is $status, 200;
@@ -46,7 +46,7 @@ is_deeply $head, {
 };
 
 throws_ok {
-    my ($proto, $status, $body, $head) = Hijk::read_http_message($fd,0);
+    my ($proto, $status, $head, $body) = Hijk::_read_http_message($fd,0);
 } qr /0 bytes/;
 
 done_testing;

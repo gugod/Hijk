@@ -12,14 +12,14 @@ sub Hijk::Error::TIMEOUT         () { Hijk::Error::READ_TIMEOUT() | Hijk::Error:
 sub Hijk::Error::CANNOT_RESOLVE  () { 1 << 2 } # 4
 #sub Hijk::Error::WHATEVER       () { 1 << 3 } # 8
 
-sub selectable_timeout {
+sub _selectable_timeout {
     my $t = shift;
     return defined($t) && $t <=0 ? undef : $t;
 }
 
-sub read_http_message {
+sub _read_http_message {
     my ($fd, $read_timeout,$block_size,$header,$head) = (shift,shift,10240,{},"");
-    $read_timeout = selectable_timeout($read_timeout);
+    $read_timeout = _selectable_timeout($read_timeout);
     my ($body,$buf,$decapitated,$nbytes,$proto);
     my $status_code = 0;
     my $no_content_len = 0;
@@ -30,7 +30,7 @@ sub read_http_message {
             if ($nfound != 1 || (defined($read_timeout) && $read_timeout <= 0));
 
         my $nbytes = POSIX::read($fd, $buf, $block_size);
-        return ($proto, $status_code, $body, $header)
+        return ($proto, $status_code, $header, $body)
             if $no_content_len && $decapitated && (!defined($nbytes) || $nbytes == 0);
         if (!defined($nbytes)) {
             next if ($! == EWOULDBLOCK || $! == EAGAIN);
@@ -63,7 +63,7 @@ sub read_http_message {
                 }
                 if ($header->{'Transfer-Encoding'} && $header->{'Transfer-Encoding'} eq 'chunked') {
                     # if there is chunked encoding we have to ignore content lenght even if we have it
-                    return ($proto, $status_code, read_chunked_body($body, $fd, $read_timeout,$header), $header);
+                    return ($proto, $status_code, $header, _read_chunked_body($body, $fd, $read_timeout,$header));
                 }
 
                 if ($header->{'Content-Length'}) {
@@ -77,10 +77,10 @@ sub read_http_message {
         }
 
     } while( !$decapitated || $block_size > 0 || $no_content_len);
-    return ($proto, $status_code, $body, $header);
+    return ($proto, $status_code, $header, $body);
 }
 
-sub read_chunked_body {
+sub _read_chunked_body {
     my ($buf,$fd, $read_timeout,$header) = @_;
     my $chunk_size   = 0;
     my $body         = "";
@@ -154,7 +154,7 @@ sub read_chunked_body {
     }
 }
 
-sub construct_socket {
+sub _construct_socket {
     my ($host, $port, $connect_timeout) = @_;
 
     # If we can't find the IP address there'll be no point in even
@@ -176,7 +176,7 @@ sub construct_socket {
         die "Failed to connect $!";
     }
 
-    $connect_timeout = selectable_timeout( $connect_timeout );
+    $connect_timeout = _selectable_timeout( $connect_timeout );
     vec(my $rout = '', fileno($soc), 1) = 1;
     my $nfound = select(undef, $rout, undef, $connect_timeout);
     if ($nfound != 1) {
@@ -194,7 +194,7 @@ sub construct_socket {
     return $soc;
 }
 
-sub build_http_message {
+sub _build_http_message {
     my $args = $_[0];
     my $path_and_qs = ($args->{path} || "/") . ( defined($args->{query_string}) ? ("?".$args->{query_string}) : "" );
     return join(
@@ -233,13 +233,13 @@ sub request {
     if (defined $cache_key and exists $args->{socket_cache}->{$cache_key}) {
         $soc = $args->{socket_cache}->{$cache_key};
     } else {
-        ($soc, my $error) = construct_socket(@$args{qw(host port connect_timeout)});
+        ($soc, my $error) = _construct_socket(@$args{qw(host port connect_timeout)});
         return {error => $error} if defined $error;
         $args->{socket_cache}->{$cache_key} = $soc if defined $cache_key;
         $args->{on_connect}->() if exists $args->{on_connect};
     }
 
-    my $r = build_http_message($args);
+    my $r = _build_http_message<($args);
     my $total = length($r);
     my $left = $total;
 
@@ -262,9 +262,9 @@ sub request {
         $left -= $rc;
     }
 
-    my ($proto,$status,$body,$head,$error);
+    my ($proto,$status,$head,$body,$error);
     eval {
-        ($proto,$status,$body,$head,$error) = read_http_message(fileno($soc), $args->{read_timeout});
+        ($proto,$status,$head,$body,$error) = _read_http_message(fileno($soc), $args->{read_timeout});
         1;
     } or do {
         my $err = $@ || "zombie error";

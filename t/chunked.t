@@ -30,7 +30,7 @@ my $fd = do {
     fileno($fh);
 };
 
-my ($proto, $status, $body, $head) = Hijk::read_http_message($fd);
+my ($proto, $status, $head, $body) = Hijk::_read_http_message($fd);
 
 
 is $status, 200;
@@ -51,7 +51,7 @@ is_deeply $head, {
 # 0 bytes to read - so we can simulate connection closed 
 # from the other end of the socket (like expired keep-alive)
 throws_ok {
-    my ($proto, $status, $body, $head) = Hijk::read_http_message($fd);
+    my ($proto, $status, $head, $body) = Hijk::_read_http_message($fd);
 } qr /0 bytes/i;
 
 done_testing;
