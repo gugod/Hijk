@@ -30,7 +30,7 @@ my $fd = do {
     fileno($fh);
 };
 
-my ($proto, $status, $head, $body) = Hijk::_read_http_message($fd);
+my ($proto, $status, $head, $body) = Hijk::_read_http_message($fd, undef, 1);
 
 
 is $status, 200;

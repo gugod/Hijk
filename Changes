@@ -1,3 +1,19 @@
+0.15: # 2014-08-30T10:00:00+000
+- The new code to support chunked transfer encoding would return a
+  nonexisting Hijk::Error::* value of "0" when it encountered a read
+  timeout. This meant that not only was the error reporting broken,
+  but anything checking if there were errors via the simple idiom of
+  "if ($res->{error}) {...}" wouldn't properly report errors.
+
+  We'll now correctly report these errors as
+  Hijk::Error::READ_TIMEOUT.
+
+- Since there may still be other bugs like that in this new parsing
+  mode it's disabled by default, if you know you want to parse chunked
+  responses you have to pass parse_chunked => 1 for now. Usually you
+  probably just want to disable chunked encoding on the other end, see
+  the note about how to do that with nginx in the docs.
+
 0.14: # 2014-08-29T15:40:36+0900
 - Start support chunked transfer encoding.
 
