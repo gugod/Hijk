@@ -33,8 +33,7 @@ sub read_http_message {
         return ($proto, $status_code, $body, $header)
             if $no_content_len && $decapitated && (!defined($nbytes) || $nbytes == 0);
         if (!defined($nbytes)) {
-            next
-                if ($! == EWOULDBLOCK || $! == EAGAIN);
+            next if ($! == EWOULDBLOCK || $! == EAGAIN);
             die "Failed to read http " .( $decapitated ? "body": "head" ). " from socket. errno = $!"
         }
 
