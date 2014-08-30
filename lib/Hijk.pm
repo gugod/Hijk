@@ -100,8 +100,7 @@ sub _read_chunked_body {
             my $current_buf = "";
             my $nbytes = POSIX::read($fd, $current_buf, $block_size);
             if (!defined($nbytes)) {
-                next
-                    if ($! == EWOULDBLOCK || $! == EAGAIN);
+                next if ($! == EWOULDBLOCK || $! == EAGAIN);
                 die "Failed to read chunked body from socket. errno = $!"
             }
 
