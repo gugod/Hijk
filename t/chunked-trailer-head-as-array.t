@@ -30,7 +30,7 @@ my $fd = do {
     $fh->seek(0, 0);
     fileno($fh);
 };
-my (undef, $proto, $status, $head, $body) = Hijk::_read_http_message($fd, undef, 1, 1);
+my (undef, $proto, $status, $head, $body) = Hijk::_read_http_message($fd, 10240, undef, 1, 1);
 
 
 is $status, 200;
@@ -49,7 +49,7 @@ is_deeply $head, [
 # this will force select() to return because there are actually
 # 0 bytes to read - so we can simulate connection closed
 # from the other end of the socket (like expired keep-alive)
-my (undef, $proto, $status, $head, $body, $error, $error_message) = Hijk::_read_http_message($fd);
+my (undef, $proto, $status, $head, $body, $error, $error_message) = Hijk::_read_http_message($fd, 10240);
 is $error, Hijk::Error::RESPONSE_BAD_READ_VALUE;
 like $error_message, qr/0 byte/;
 

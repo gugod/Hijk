@@ -12,6 +12,12 @@
   headers as an array (with potential duplicated headers), rather than
   the default behavior of lossily returning them as a hash.
 
+- There's now a "read_length" option to control how much we
+  POSIX::read($fd, $buf, $read_length) at a time. We don't expect this
+  to be useful, it's mainly configurable on general principle so we
+  don't have arbitrary unconfigurable hardcoded constants in the
+  source.
+
 0.15: # 2014-08-30T10:00:00+000
 - The new code to support chunked transfer encoding would return a
   nonexisting Hijk::Error::* value of "0" when it encountered a read

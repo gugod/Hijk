@@ -23,13 +23,12 @@ sub _selectable_timeout {
 }
 
 sub _read_http_message {
-    my ($fd, $read_timeout, $parse_chunked, $head_as_array) = @_;
+    my ($fd, $read_length, $read_timeout, $parse_chunked, $head_as_array) = @_;
     $read_timeout = _selectable_timeout($read_timeout);
     my ($body,$buf,$decapitated,$nbytes,$proto);
     my $status_code = 0;
     my $header = $head_as_array ? [] : {};
     my $no_content_len = 0;
-    my $block_size = 10 * 2 ** 10; # TODO: Make this configurable?
     my $head = "";
     vec(my $rin = '', $fd, 1) = 1;
     do {
@@ -37,7 +36,7 @@ sub _read_http_message {
         return (undef,undef,0,undef,undef, Hijk::Error::READ_TIMEOUT)
             if ($nfound != 1 || (defined($read_timeout) && $read_timeout <= 0));
 
-        my $nbytes = POSIX::read($fd, $buf, $block_size);
+        my $nbytes = POSIX::read($fd, $buf, $read_length);
         return ($proto, undef, $status_code, $header, $body)
             if $no_content_len && $decapitated && (!defined($nbytes) || $nbytes == 0);
         if (!defined($nbytes)) {
@@ -62,7 +61,7 @@ sub _read_http_message {
         if ($decapitated) {
             $body .= $buf;
             if (!$no_content_len) {
-                $block_size -= $nbytes;
+                $read_length -= $nbytes;
             }
         }
         else {
@@ -109,7 +108,7 @@ sub _read_http_message {
                     return (
                         $close_connection, $proto, $status_code, $header,
                         _read_chunked_body(
-                            $body, $fd, $read_timeout,
+                            $body, $fd, $read_length, $read_timeout,
                             $head_as_array
                               ? $trailer_mode
                               : ($header->{Trailer} ? 1 : 0),
@@ -118,26 +117,25 @@ sub _read_http_message {
                 }
 
                 if ($head_as_array and $content_length) {
-                    $block_size = $content_length - length($body);
+                    $read_length = $content_length - length($body);
                 } elsif (!$head_as_array and $header->{'Content-Length'}) {
-                    $block_size = $header->{'Content-Length'} - length($body);
+                    $read_length = $header->{'Content-Length'} - length($body);
                 } else {
-                    $block_size = 10204;
+                    $read_length = 10204;
                     $no_content_len = 1;
                 }
             }
         }
 
-    } while( !$decapitated || $block_size > 0 || $no_content_len);
+    } while( !$decapitated || $read_length > 0 || $no_content_len);
     return (undef, $proto, $status_code, $header, $body);
 }
 
 sub _read_chunked_body {
-    my ($buf,$fd, $read_timeout,$true_trailer_header) = @_;
+    my ($buf,$fd,$read_length,$read_timeout,$true_trailer_header) = @_;
     my $chunk_size   = 0;
     my $body         = "";
-    my $block_size = 10240;
-    my $trailer_mode  = 0;
+    my $trailer_mode = 0;
 
     vec(my $rin = '', $fd, 1) = 1;
     while(1) {
@@ -147,7 +145,7 @@ sub _read_chunked_body {
             return (undef, Hijk::Error::READ_TIMEOUT)
                 if ($nfound != 1 || (defined($read_timeout) && $read_timeout <= 0));
             my $current_buf = "";
-            my $nbytes = POSIX::read($fd, $current_buf, $block_size);
+            my $nbytes = POSIX::read($fd, $current_buf, $read_length);
             if (!defined($nbytes)) {
                 next if ($! == EWOULDBLOCK || $! == EAGAIN);
                 return (
@@ -296,6 +294,9 @@ sub request {
     # to "socket_cache => undef" to disable the cache.
     $args->{socket_cache} = $SOCKET_CACHE unless exists $args->{socket_cache};
 
+    # Provide a default for the read_length option
+    $args->{read_length} = 10 * 2 ** 10 unless exists $args->{read_length};
+
     # Use $; so we can use the $socket_cache->{$$, $host, $port}
     # idiom to access the cache.
     my $cache_key; $cache_key = join($;, $$, @$args{qw(host port)}) if defined $args->{socket_cache};
@@ -346,7 +347,7 @@ sub request {
     my ($proto,$close_connection,$status,$head,$body,$error,$error_message,$errno_number,$errno_string);
     eval {
         ($close_connection,$proto,$status,$head,$body,$error,$error_message,$errno_number,$errno_string) =
-        _read_http_message(fileno($soc), @$args{qw(read_timeout parse_chunked head_as_array)});
+        _read_http_message(fileno($soc), @$args{qw(read_length read_timeout parse_chunked head_as_array)});
         1;
     } or do {
         my $err = $@ || "zombie error";
@@ -465,6 +466,7 @@ listed below
     port            => ...,
     connect_timeout => undef,
     read_timeout    => undef,
+    read_length     => 10240,
     method          => "GET",
     path            => "/",
     query_string    => "",
@@ -580,6 +582,9 @@ C<ArrayRef>. This makes it easier to retrieve specific header fields,
 but it means that we'll clobber any duplicated header names with the
 most recently seen header value. To get the returned headers as an
 C<ArrayRef> instead specify C<head_as_array>.
+
+If you want to fiddle with the C<read_length> value it controls how
+much we C<POSIX::read($fd, $buf, $read_length)> at a time.
 
 We currently don't support servers returning a http body without an accompanying
 C<Content-Length> header; bodies B<MUST> have a C<Content-Length> or we won't pick
