@@ -263,8 +263,10 @@ sub request {
         $left -= $rc;
     }
 
-    my ($proto,$status,$body,$head,$error) = eval {
-        read_http_message(fileno($soc), $args->{read_timeout});
+    my ($proto,$status,$body,$head,$error);
+    eval {
+        ($proto,$status,$body,$head,$error) = read_http_message(fileno($soc), $args->{read_timeout});
+        1;
     } or do {
         my $err = $@ || "zombie error";
         delete $args->{socket_cache}->{$cache_key} if defined $cache_key;
