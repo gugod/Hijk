@@ -27,23 +27,23 @@ sub _read_http_message {
     $read_timeout = _selectable_timeout($read_timeout);
     my ($body,$buf,$decapitated,$nbytes,$proto);
     my $status_code = 0;
-    my $header = {};
+    my $header = $head_as_array ? [] : {};
     my $no_content_len = 0;
     my $block_size = 10 * 2 ** 10; # TODO: Make this configurable?
     my $head = "";
     vec(my $rin = '', $fd, 1) = 1;
     do {
         my $nfound = select($rin, undef, undef, $read_timeout);
-        return (undef,0,undef,undef, Hijk::Error::READ_TIMEOUT)
+        return (undef,undef,0,undef,undef, Hijk::Error::READ_TIMEOUT)
             if ($nfound != 1 || (defined($read_timeout) && $read_timeout <= 0));
 
         my $nbytes = POSIX::read($fd, $buf, $block_size);
-        return ($proto, $status_code, $header, $body)
+        return ($proto, undef, $status_code, $header, $body)
             if $no_content_len && $decapitated && (!defined($nbytes) || $nbytes == 0);
         if (!defined($nbytes)) {
             next if ($! == EWOULDBLOCK || $! == EAGAIN);
             return (
-                undef, 0, undef, undef,
+                undef, undef, 0, undef, undef,
                 Hijk::Error::RESPONSE_READ_ERROR,
                 "Failed to read http " . ($decapitated ? "body": "head") . " from socket",
                 $!+0,
@@ -53,7 +53,7 @@ sub _read_http_message {
 
         if ($nbytes == 0) {
             return (
-                undef, 0, undef, undef,
+                undef, undef, 0, undef, undef,
                 Hijk::Error::RESPONSE_BAD_READ_VALUE,
                 "Wasn't expecting a 0 byte response for http " . ($decapitated ? "body": "head" ) . ". This shouldn't happen",
             );
@@ -76,22 +76,52 @@ sub _read_http_message {
                 $status_code = substr($head, 9, 3);
                 substr($head, 0, index($head, $CRLF) + 2, ""); # 2 = length($CRLF)
 
+                my ($doing_chunked, $content_length, $close_connection, $trailer_mode);
                 for (split /${CRLF}/o, $head) {
                     my ($key, $value) = split /: /, $_, 2;
-                    $header->{$key} = $value;
+
+                    if ($head_as_array) {
+                        push @$header => $key, $value;
+
+                        # Figure this out now so we don't need to scan
+                        # the list later.
+                        if ($key eq 'Transfer-Encoding' and $value eq 'chunked') {
+                            $doing_chunked = 1;
+                        } elsif ($key eq 'Content-Length') {
+                            $content_length = $value;
+                        } elsif ($key eq 'Connection' and $value eq 'close') {
+                            $close_connection = 1
+                        } elsif ($doing_chunked and $key eq 'Trailer' and $value) {
+                            $trailer_mode = 1;
+                        }
+                    } else {
+                        $header->{$key} = $value;
+                    }
                 }
-                if ($header->{'Transfer-Encoding'} && $header->{'Transfer-Encoding'} eq 'chunked') {
+
+                if (($head_as_array and $doing_chunked)
+                    or
+                    (!$head_as_array and ($header->{'Transfer-Encoding'} and $header->{'Transfer-Encoding'} eq 'chunked'))) {
                     die "PANIC: The experimental Hijk support for chunked transfer encoding needs to be explicitly enabled with parse_chunked => 1"
                         unless $parse_chunked;
 
                     # if there is chunked encoding we have to ignore content lenght even if we have it
-                    return ($proto, $status_code, $header, _read_chunked_body($body, $fd, $read_timeout,$header));
+                    return (
+                        $close_connection, $proto, $status_code, $header,
+                        _read_chunked_body(
+                            $body, $fd, $read_timeout,
+                            $head_as_array
+                              ? $trailer_mode
+                              : ($header->{Trailer} ? 1 : 0),
+                        ),
+                    );
                 }
 
-                if ($header->{'Content-Length'}) {
+                if ($head_as_array and $content_length) {
+                    $block_size = $content_length - length($body);
+                } elsif (!$head_as_array and $header->{'Content-Length'}) {
                     $block_size = $header->{'Content-Length'} - length($body);
-                }
-                else {
+                } else {
                     $block_size = 10204;
                     $no_content_len = 1;
                 }
@@ -99,11 +129,11 @@ sub _read_http_message {
         }
 
     } while( !$decapitated || $block_size > 0 || $no_content_len);
-    return ($proto, $status_code, $header, $body);
+    return (undef, $proto, $status_code, $header, $body);
 }
 
 sub _read_chunked_body {
-    my ($buf,$fd, $read_timeout,$header) = @_;
+    my ($buf,$fd, $read_timeout,$true_trailer_header) = @_;
     my $chunk_size   = 0;
     my $body         = "";
     my $block_size = 10240;
@@ -172,7 +202,7 @@ sub _read_chunked_body {
                 if ($neck_pos > 0) {
                     $chunk_size = hex(substr($buf, 0, $neck_pos));
                     if ($chunk_size == 0) {
-                        if ($header->{Trailer}) {
+                        if ($true_trailer_header) {
                             $trailer_mode = 1;
                         } else {
                             return $body;
@@ -313,10 +343,10 @@ sub request {
         $left -= $rc;
     }
 
-    my ($proto,$status,$head,$body,$error,$error_message,$errno_number,$errno_string);
+    my ($proto,$close_connection,$status,$head,$body,$error,$error_message,$errno_number,$errno_string);
     eval {
-        ($proto,$status,$head,$body,$error,$error_message,$errno_number,$errno_string) =
-        _read_http_message(fileno($soc), $args->{read_timeout}, $args->{parse_chunked});
+        ($close_connection,$proto,$status,$head,$body,$error,$error_message,$errno_number,$errno_string) =
+        _read_http_message(fileno($soc), @$args{qw(read_timeout parse_chunked head_as_array)});
         1;
     } or do {
         my $err = $@ || "zombie error";
@@ -332,8 +362,8 @@ sub request {
         # ShardedKV::Storage::Rest tests) is an example of such a
         # server. In either case we can't cache a connection for a 1.0
         # server anyway, so BEGONE!
-        or (defined $proto and $proto eq 'HTTP/1.0')
-        or ($head->{Connection} && $head->{Connection} eq 'close')) {
+        or $close_connection
+        or (defined $proto and $proto eq 'HTTP/1.0')) {
         delete $args->{socket_cache}->{$cache_key} if defined $cache_key;
         shutdown($soc, 2);
     }
@@ -443,6 +473,7 @@ listed below
     socket_cache    => \%Hijk::SOCKET_CACHE, # (undef to disable, or \my %your_socket_cache)
     on_connect      => undef, # (or sub { ... })
     parse_chunked   => 0,
+    head_as_array   => 0,
 
 Notice how Hijk does not take a full URI string as input, you have to
 specify the individual parts of the URL. Users who need to parse an
@@ -544,10 +575,11 @@ Again, Hijk doesn't escape any values for you, so these values B<MUST>
 be properly escaped before being passed in, unless you want to issue
 invalid requests.
 
-The C<head> in the response is a C<HashRef> rather then an
+By default the C<head> in the response is a C<HashRef> rather then an
 C<ArrayRef>. This makes it easier to retrieve specific header fields,
 but it means that we'll clobber any duplicated header names with the
-most recently seen header value.
+most recently seen header value. To get the returned headers as an
+C<ArrayRef> instead specify C<head_as_array>.
 
 We currently don't support servers returning a http body without an accompanying
 C<Content-Length> header; bodies B<MUST> have a C<Content-Length> or we won't pick

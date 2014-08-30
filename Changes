@@ -8,6 +8,10 @@
   e.g. regex checks against regular errors thrown by this library
   should be updated to check the new Hijk::Error::* constants instead.
 
+- It's now possible to specify "head_as_array" to get the returned
+  headers as an array (with potential duplicated headers), rather than
+  the default behavior of lossily returning them as a hash.
+
 0.15: # 2014-08-30T10:00:00+000
 - The new code to support chunked transfer encoding would return a
   nonexisting Hijk::Error::* value of "0" when it encountered a read
