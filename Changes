@@ -1,3 +1,4 @@
+0.15: # 2014-08-31T00:10:00+000
 - Major Change: There are several new Hijk::Error::* constants for
   common issues that happened during normal requests in the face of
   regular exceptions out of the control of this library, such as

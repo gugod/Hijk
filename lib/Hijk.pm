@@ -4,7 +4,8 @@ use warnings;
 use POSIX qw(:errno_h);
 use Socket qw(PF_INET SOCK_STREAM pack_sockaddr_in inet_ntoa $CRLF SOL_SOCKET SO_ERROR);
 use Fcntl qw(F_GETFL F_SETFL O_NONBLOCK);
-our $VERSION = "0.15";
+
+our $VERSION = "0.16";
 
 sub Hijk::Error::CONNECT_TIMEOUT         () { 1 << 0 } # 1
 sub Hijk::Error::READ_TIMEOUT            () { 1 << 1 } # 2
