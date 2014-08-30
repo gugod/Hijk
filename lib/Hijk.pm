@@ -239,7 +239,7 @@ sub request {
         $args->{on_connect}->() if exists $args->{on_connect};
     }
 
-    my $r = _build_http_message<($args);
+    my $r = _build_http_message($args);
     my $total = length($r);
     my $left = $total;
 
