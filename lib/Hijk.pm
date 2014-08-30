@@ -23,11 +23,14 @@ sub _selectable_timeout {
 }
 
 sub _read_http_message {
-    my ($fd, $read_timeout, $parse_chunked, $block_size,$header,$head) = (shift,shift,shift,10240,{},"");
+    my ($fd, $read_timeout, $parse_chunked, $head_as_array) = @_;
     $read_timeout = _selectable_timeout($read_timeout);
     my ($body,$buf,$decapitated,$nbytes,$proto);
     my $status_code = 0;
+    my $header = {};
     my $no_content_len = 0;
+    my $block_size = 10 * 2 ** 10; # TODO: Make this configurable?
+    my $head = "";
     vec(my $rin = '', $fd, 1) = 1;
     do {
         my $nfound = select($rin, undef, undef, $read_timeout);
