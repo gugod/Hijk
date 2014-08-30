@@ -2,7 +2,6 @@
 use strict;
 use warnings;
 use Test::More;
-use Test::Exception;
 
 use File::Temp ();
 use File::Temp qw/ :seekable /;
@@ -45,8 +44,8 @@ is_deeply $head, {
     "Connection" => "close",
 };
 
-throws_ok {
-    my ($proto, $status, $head, $body) = Hijk::_read_http_message($fd,0);
-} qr /0 bytes/;
+($proto, $status, $head, $body, my $error, my $error_message) = Hijk::_read_http_message($fd, 0);
+is $error, Hijk::Error::RESPONSE_BAD_READ_VALUE;
+like $error_message, qr/0 byte/;
 
 done_testing;

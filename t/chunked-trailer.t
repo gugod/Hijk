@@ -4,7 +4,6 @@ use Test::More;
 use File::Temp ();
 use File::Temp qw/ :seekable /;
 use Hijk;
-use Test::Exception;
 
 my $fh = File::Temp->new();
 my $fd = do {
@@ -50,8 +49,8 @@ is_deeply $head, {
 # this will force select() to return because there are actually
 # 0 bytes to read - so we can simulate connection closed
 # from the other end of the socket (like expired keep-alive)
-throws_ok {
-    my ($proto, $status, $head, $body) = Hijk::_read_http_message($fd);
-} qr /0 bytes/i;
+my ($proto, $status, $head, $body, $error, $error_message) = Hijk::_read_http_message($fd);
+is $error, Hijk::Error::RESPONSE_BAD_READ_VALUE;
+like $error_message, qr/0 byte/;
 
 done_testing;

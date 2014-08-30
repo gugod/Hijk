@@ -1,3 +1,13 @@
+- Major Change: There are several new Hijk::Error::* constants for
+  common issues that happened during normal requests in the face of
+  regular exceptions out of the control of this library, such as
+  network blips.
+
+  Existing code that checks $res->{error} should be
+  forwards-compatible with this change, but anything that was doing
+  e.g. regex checks against regular errors thrown by this library
+  should be updated to check the new Hijk::Error::* constants instead.
+
 0.15: # 2014-08-30T10:00:00+000
 - The new code to support chunked transfer encoding would return a
   nonexisting Hijk::Error::* value of "0" when it encountered a read
