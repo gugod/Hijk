@@ -389,7 +389,7 @@ __END__
 
 =head1 NAME
 
-Hijk - Fast & minimal raw HTTP client
+Hijk - Fast & minimal low-level HTTP client
 
 =head1 SYNOPSIS
 
@@ -432,9 +432,9 @@ escape your values etc.
 
 =head1 DESCRIPTION
 
-Hijk is a fast & minimal raw HTTP client intended to be used where you
-control both the client and the server, e.g. for talking to some
-internal service from a frontend user-facing web application.
+Hijk is a fast & minimal low-level HTTP client intended to be used
+where you control both the client and the server, e.g. for talking to
+some internal service from a frontend user-facing web application.
 
 It is C<NOT> a general HTTP user agent, it doesn't support redirects,
 proxies, SSL and any number of other advanced HTTP features like (in
@@ -452,15 +452,16 @@ otherwise unavailable.
 
 =head1 FUNCTION: Hijk::request( $args :HashRef ) :HashRef
 
-C<Hijk::request> function you should use. It (or anything else in this
-package for that matter) is not exported, so you have to use the fully
-qualified name. It takes a C<HashRef> of arguments and either dies or
-returns a C<HashRef> as a response.
+C<Hijk::request> is the only function you should use. It (or anything
+else in this package for that matter) is not exported, so you have to
+use the fully qualified name.
 
-The argument to it must be a C<HashRef> containing some of the
-key-value pairs from the following list. The value for C<host> and
-C<port> are mandatory, but others are optional with default values
-listed below
+It takes a C<HashRef> of arguments and either dies or returns a
+C<HashRef> as a response.
+
+The C<HashRef> argument to it must contain some of the key-value pairs
+from the following list. The value for C<host> and C<port> are
+mandatory, but others are optional with default values listed below.
 
     protocol        => "HTTP/1.1", # (or "HTTP/1.0")
     host            => ...,
@@ -499,19 +500,19 @@ Will produce these request headers:
     X-Requested-With: Hijk
 
 Hijk doesn't escape any values for you, it just passes them through
-as-is. You can easily produce corrupt requests if e.g. any of these
+as-is. You can easily produce invalid requests if e.g. any of these
 strings contain a newline, or aren't otherwise properly escaped.
 
 The value of C<connect_timeout> or C<read_timeout> is in floating
-point seconds, and is used as the time limit for connecting and
-writing to the host, and reading from the socket, respectively. The
-default value for both is C<0>, meaning no timeout limit. If you don't
+point seconds, and is used as the time limit for connecting to the
+host, and reading the response back from it, respectively. The default
+value for both is C<undef>, meaning no timeout limit. If you don't
 supply these timeouts and the host really is unreachable or slow,
 we'll reach the TCP timeout limit before returning some other error to
 you.
 
 The default C<protocol> is C<HTTP/1.1>, but you can also specify
-C<HTTP/1.0>. The advantage of using HTTP/1.1 is support for
+C<HTTP/1.0>. The advantage of using C<HTTP/1.1> is support for
 keep-alive, which matters a lot in environments where the connection
 setup represents non-trivial overhead. Sometimes that overhead is
 negligible (e.g. on Linux talking to an nginx on the local network),
@@ -540,12 +541,13 @@ arguments, and is called in void context.
 We have experimental support for parsing chunked responses
 encoding. historically Hijk didn't support this at all and if you
 wanted to use it with e.g. nginx you had to add
-C<chunked_transfer_encoding off> to its config file. Because you may
-just want to do that instead of having Hijk do more work to parse this
-out with a more complex and experimental codepath you have to
-explicitly enable it with C<parse_chunked>. Otherwise Hijk will die
-when it encounters chunked responses. The C<parse_chunked> option may
-be turned on by default in the future.
+C<chunked_transfer_encoding off> to the nginx config file.
+
+Since you may just want to do that instead of having Hijk do more work
+to parse this out with a more complex and experimental codepath you
+have to explicitly enable it with C<parse_chunked>. Otherwise Hijk
+will die when it encounters chunked responses. The C<parse_chunked>
+option may be turned on by default in the future.
 
 The return value is a C<HashRef> representing a response. It contains
 the following key-value pairs.
@@ -553,8 +555,8 @@ the following key-value pairs.
     proto         => :Str
     status        => :StatusCode
     body          => :Str
-    head          => :HashRef
-    error         => :Int
+    head          => :HashRef (or :ArrayRef with "head_as_array")
+    error         => :PositiveInt
     error_message => :Str
     errno_number  => :Int
     errno_string  => :Str
@@ -597,29 +599,16 @@ If we had a recoverable error we'll include an "error" key whose value
 is a bitfield that you can check against Hijk::Error::*
 constants. Those are:
 
-=over 4
-
-=item Hijk::Error::CONNECT_TIMEOUT
-
-=item Hijk::Error::READ_TIMEOUT
-
-=item Hijk::Error::TIMEOUT
-
-=item Hijk::Error::CANNOT_RESOLVE
-
-=item Hijk::Error::REQUEST_SELECT_ERROR
-
-=item Hijk::Error::REQUEST_WRITE_ERROR
-
-=item Hijk::Error::REQUEST_ERROR
-
-=item Hijk::Error::RESPONSE_READ_ERROR
-
-=item Hijk::Error::RESPONSE_BAD_READ_VALUE
-
-=item Hijk::Error::RESPONSE_ERROR
-
-=back
+    Hijk::Error::CONNECT_TIMEOUT
+    Hijk::Error::READ_TIMEOUT
+    Hijk::Error::TIMEOUT
+    Hijk::Error::CANNOT_RESOLVE
+    Hijk::Error::REQUEST_SELECT_ERROR
+    Hijk::Error::REQUEST_WRITE_ERROR
+    Hijk::Error::REQUEST_ERROR
+    Hijk::Error::RESPONSE_READ_ERROR
+    Hijk::Error::RESPONSE_BAD_READ_VALUE
+    Hijk::Error::RESPONSE_ERROR
 
 In addition we might return C<error_message>, C<errno_number> and
 C<errno_string> keys, see the discussion of C<Hijk::Error::REQUEST_*>
@@ -640,9 +629,9 @@ C<gethostbyname()> the host you've provided.
 
 If we fail to do a C<select()> or C<write()> during when sending the
 response we'll return C<Hijk::Error::REQUEST_SELECT_ERROR> or
-C<Hijk::Error::REQUEST_WRITE_ERROR>, respectively. similar to
+C<Hijk::Error::REQUEST_WRITE_ERROR>, respectively. Similarly to
 C<Hijk::Error::TIMEOUT> the C<Hijk::Error::REQUEST_ERROR> constant is
-a union of these two and any other request errors we might add in the
+a union of these two, and any other request errors we might add in the
 future.
 
 When we're getting the response back we'll return
@@ -655,8 +644,8 @@ might add in the future.
 Some of these C<Hijk::Error::REQUEST_*> and C<Hijk::Error::RESPONSE_*>
 errors are re-thrown errors from system calls. In that case we'll also
 pass along C<error_message> which is a short human readable error
-message about the error, and C<errno_number> & C<errno_string>, which
-are C<$!+0> and C<"$!"> at the time we had the error.
+message about the error, as well as C<errno_number> & C<errno_string>,
+which are C<$!+0> and C<"$!"> at the time we had the error.
 
 Hijk might encounter other errors during the course of the request and
 C<WILL> call C<die> if that happens, so if you don't want your program
