@@ -12,4 +12,8 @@ sub import {
     eval'sub Hijk::DEBUG(){1}';
 }
 
+sub LOG {
+    print STDERR $_[0] . "\n";
+}
+
 1;

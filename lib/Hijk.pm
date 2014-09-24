@@ -293,7 +293,7 @@ sub request {
     my $args = $_[0];
 
     if (DEBUG) {
-        print STDERR "Hijk::DEBUG mode is ON.\n";
+        Hijk::DEBUG::LOG("LOG SOMETHING AT THE BEGUN OF REQUEST");
     }
 
     # Backwards compatibility for code that provided the old timeout
@@ -378,6 +378,11 @@ sub request {
         delete $args->{socket_cache}->{$cache_key} if defined $cache_key;
         shutdown($soc, 2);
     }
+
+    if (DEBUG) {
+        Hijk::DEBUG::LOG("LOG SOMETHING AT THE END OF REQUEST");
+    }
+
     return {
         proto => $proto,
         status => $status,
