@@ -1,4 +1,9 @@
 package Hijk;
+BEGIN {
+    my $debug = "Hijk::DEBUG";
+    *$debug = sub() { 0 } unless *{$debug}{CODE};
+}
+
 use strict;
 use warnings;
 use POSIX qw(:errno_h);
@@ -286,6 +291,10 @@ our $SOCKET_CACHE = {};
 
 sub request {
     my $args = $_[0];
+
+    if (DEBUG) {
+        print STDERR "Hijk::DEBUG mode is ON.\n";
+    }
 
     # Backwards compatibility for code that provided the old timeout
     # argument.
