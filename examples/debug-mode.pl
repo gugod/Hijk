@@ -1,7 +1,7 @@
 
 use strict;
 
-use Hijk::DEBUG;
+use Hijk::DEBUG trace => "/tmp/hijk_debug";
 use Hijk;
 
 use Data::Dumper;

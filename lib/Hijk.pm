@@ -29,7 +29,7 @@ sub _selectable_timeout {
 }
 
 sub _read_http_message {
-    my ($fd, $read_length, $read_timeout, $parse_chunked, $head_as_array) = @_;
+    my ($cache_key,$fd, $read_length, $read_timeout, $parse_chunked, $head_as_array) = @_;
     $read_timeout = _selectable_timeout($read_timeout);
     my ($body,$buf,$decapitated,$nbytes,$proto);
     my $status_code = 0;
@@ -62,6 +62,10 @@ sub _read_http_message {
                 Hijk::Error::RESPONSE_BAD_READ_VALUE,
                 "Wasn't expecting a 0 byte response for http " . ($decapitated ? "body": "head" ) . ". This shouldn't happen",
             );
+        }
+
+        if (DEBUG) {
+            Hijk::DEBUG::LOG_CONNECTION($cache_key, "read", $buf);
         }
 
         if ($decapitated) {
@@ -292,10 +296,6 @@ our $SOCKET_CACHE = {};
 sub request {
     my $args = $_[0];
 
-    if (DEBUG) {
-        Hijk::DEBUG::LOG("LOG SOMETHING AT THE BEGUN OF REQUEST");
-    }
-
     # Backwards compatibility for code that provided the old timeout
     # argument.
     $args->{connect_timeout} = $args->{read_timeout} = $args->{timeout} if exists $args->{timeout};
@@ -352,12 +352,16 @@ sub request {
             };
         }
         $left -= $rc;
+
+        if (DEBUG) {
+            Hijk::DEBUG::LOG_CONNECTION($cache_key, "write", $r);
+        }
     }
 
     my ($proto,$close_connection,$status,$head,$body,$error,$error_message,$errno_number,$errno_string);
     eval {
         ($close_connection,$proto,$status,$head,$body,$error,$error_message,$errno_number,$errno_string) =
-        _read_http_message(fileno($soc), @$args{qw(read_length read_timeout parse_chunked head_as_array)});
+        _read_http_message($cache_key,fileno($soc), @$args{qw(read_length read_timeout parse_chunked head_as_array)});
         1;
     } or do {
         my $err = $@ || "zombie error";
@@ -377,10 +381,6 @@ sub request {
         or (defined $proto and $proto eq 'HTTP/1.0')) {
         delete $args->{socket_cache}->{$cache_key} if defined $cache_key;
         shutdown($soc, 2);
-    }
-
-    if (DEBUG) {
-        Hijk::DEBUG::LOG("LOG SOMETHING AT THE END OF REQUEST");
     }
 
     return {
