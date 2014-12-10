@@ -11,6 +11,9 @@ for my $protocol ("HTTP/1.0", "HTTP/1.1") {
     is Hijk::_build_http_message({ protocol => $protocol, host => "example.com" }),
         "GET / $protocol\x0d\x0aHost: example.com\x0d\x0a\x0d\x0a";
 
+    is Hijk::_build_http_message({ method => "HEAD", protocol => $protocol, host => "example.com" }),
+        "HEAD / $protocol\x0d\x0aHost: example.com\x0d\x0a\x0d\x0a";
+
     is Hijk::_build_http_message({ protocol => $protocol, host => "www.example.com", port => "8080" }),
         "GET / $protocol\x0d\x0aHost: www.example.com\x0d\x0a\x0d\x0a";
 

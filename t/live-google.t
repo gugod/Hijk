@@ -60,6 +60,22 @@ subtest "timeout and cache" => sub {
 
         ok !exists($res->{error}), '$res->{error} does not exist, because we do not expect connect timeout to happen';
         cmp_ok scalar(keys %{$Hijk::SOCKET_CACHE}), '==', 0, "We have nothing in the global socket cache";
+        cmp_ok $res->{body}, "ne", "", "We a body with a GET requests";
+    } "We could make the request";
+
+    lives_ok {
+        my %socket_cache;
+        my $res = Hijk::request({
+            method => "HEAD",
+            host => 'google.com',
+            port => 80,
+            timeout => 0,
+            socket_cache => undef,
+        });
+
+        ok !exists($res->{error}), '$res->{error} does not exist, because we do not expect connect timeout to happen';
+        cmp_ok scalar(keys %{$Hijk::SOCKET_CACHE}), '==', 0, "We have nothing in the global socket cache";
+        cmp_ok $res->{body}, "eq", "", "We have no body from HEAD requests";
     } "We could make the request";
 };
 

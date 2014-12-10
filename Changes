@@ -1,3 +1,8 @@
+0.18: # 2014-12-10T14:00:00+000
+- We now do the right thing on "method => 'HEAD'". I.e. ignore the
+  Content-Length parameter, previously we'd just hang trying to slurp
+  up the body.
+
 0.17: # 2014-08-31T18:30:00+000
 - Minor documentation changes, no functional changes.
 - The version number for the last release was incorrect in this

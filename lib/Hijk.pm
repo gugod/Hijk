@@ -19,7 +19,7 @@ sub Hijk::Error::RESPONSE_BAD_READ_VALUE () { 1 << 6 } # 64
 sub Hijk::Error::RESPONSE_ERROR          () { Hijk::Error::RESPONSE_READ_ERROR | Hijk::Error::RESPONSE_BAD_READ_VALUE } # 96
 
 sub _read_http_message {
-    my ($fd, $read_length, $read_timeout, $parse_chunked, $head_as_array) = @_;
+    my ($fd, $read_length, $read_timeout, $parse_chunked, $head_as_array, $method) = @_;
     $read_timeout = undef if defined($read_timeout) && $read_timeout <= 0;
 
     my ($body,$buf,$decapitated,$nbytes,$proto);
@@ -27,6 +27,7 @@ sub _read_http_message {
     my $header = $head_as_array ? [] : {};
     my $no_content_len = 0;
     my $head = "";
+    my $method_is_head = do { no warnings qw(uninitialized); $method eq "HEAD" };
     vec(my $rin = '', $fd, 1) = 1;
     do {
         return (undef,undef,0,undef,undef, Hijk::Error::READ_TIMEOUT)
@@ -122,8 +123,7 @@ sub _read_http_message {
                 }
             }
         }
-
-    } while( !$decapitated || $read_length > 0 || $no_content_len);
+    } while( !$decapitated || (!$method_is_head && ($read_length > 0 || $no_content_len)) );
     return (undef, $proto, $status_code, $header, $body);
 }
 
@@ -339,7 +339,7 @@ sub request {
     my ($proto,$close_connection,$status,$head,$body,$error,$error_message,$errno_number,$errno_string);
     eval {
         ($close_connection,$proto,$status,$head,$body,$error,$error_message,$errno_number,$errno_string) =
-        _read_http_message(fileno($soc), @$args{qw(read_length read_timeout parse_chunked head_as_array)});
+        _read_http_message(fileno($soc), @$args{qw(read_length read_timeout parse_chunked head_as_array method)});
         1;
     } or do {
         my $err = $@ || "zombie error";
