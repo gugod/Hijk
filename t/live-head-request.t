@@ -49,6 +49,6 @@ subtest "expect HEAD response without a Content-Length" => sub {
     cmp_ok $res->{body}, "eq", "", "Got no body wit the HEAD response, also have no Content-Length";
 };
 
-END { kill INT => $pid }
+END { kill INT => $pid if $pid }
 
 done_testing;
