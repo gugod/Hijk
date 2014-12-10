@@ -2,6 +2,8 @@
 - We now do the right thing on "method => 'HEAD'". I.e. ignore the
   Content-Length parameter, previously we'd just hang trying to slurp
   up the body.
+- Fix an edge case with some of the live tests leaving around a HTTP
+  server if they died, these don't run by default.
 
 0.17: # 2014-08-31T18:30:00+000
 - Minor documentation changes, no functional changes.

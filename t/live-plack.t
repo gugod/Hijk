@@ -19,7 +19,6 @@ die "Fail to fork then start a plack server" unless defined $pid;
 if ($pid == 0) {
     require Plack::Runner;
     my $runner = Plack::Runner->new;
-    print STDERR "$FindBin::Bin/bin/it-takes-time.psgi\n";
     $runner->parse_options("--port", "5001", "$FindBin::Bin/bin/it-takes-time.psgi");
     $runner->run;
     exit;
@@ -48,6 +47,6 @@ subtest "do not expect timeout" => sub {
     } 'local plack send back something within 10s';
 };
 
-kill INT => $pid;
+END { kill INT => $pid }
 
 done_testing;
