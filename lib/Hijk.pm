@@ -101,7 +101,7 @@ sub _read_http_message {
                     die "PANIC: The experimental Hijk support for chunked transfer encoding needs to be explicitly enabled with parse_chunked => 1"
                         unless $parse_chunked;
 
-                    # if there is chunked encoding we have to ignore content lenght even if we have it
+                    # if there is chunked encoding we have to ignore content length even if we have it
                     return (
                         $close_connection, $proto, $status_code, $header,
                         _read_chunked_body(
