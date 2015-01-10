@@ -28,18 +28,19 @@ sub _read_http_message {
     my $no_content_len = 0;
     my $head = "";
     my $method_is_head = do { no warnings qw(uninitialized); $method eq "HEAD" };
+    my $close_connection;
     vec(my $rin = '', $fd, 1) = 1;
     do {
-        return (undef,undef,0,undef,undef, Hijk::Error::READ_TIMEOUT)
+        return ($close_connection,undef,0,undef,undef, Hijk::Error::READ_TIMEOUT)
             if ((select($rin, undef, undef, $read_timeout) != 1) || (defined($read_timeout) && $read_timeout <= 0));
 
         my $nbytes = POSIX::read($fd, $buf, $read_length);
-        return (undef, $proto, $status_code, $header, $body)
+        return ($close_connection, $proto, $status_code, $header, $body)
             if $no_content_len && $decapitated && (!defined($nbytes) || $nbytes == 0);
         if (!defined($nbytes)) {
             next if ($! == EWOULDBLOCK || $! == EAGAIN);
             return (
-                undef, undef, 0, undef, undef,
+                $close_connection, undef, 0, undef, undef,
                 Hijk::Error::RESPONSE_READ_ERROR,
                 "Failed to read http " . ($decapitated ? "body": "head") . " from socket",
                 $!+0,
@@ -49,7 +50,7 @@ sub _read_http_message {
 
         if ($nbytes == 0) {
             return (
-                undef, undef, 0, undef, undef,
+                $close_connection, undef, 0, undef, undef,
                 Hijk::Error::RESPONSE_BAD_READ_VALUE,
                 "Wasn't expecting a 0 byte response for http " . ($decapitated ? "body": "head" ) . ". This shouldn't happen",
             );
@@ -72,32 +73,42 @@ sub _read_http_message {
                 $status_code = substr($head, 9, 3);
                 substr($head, 0, index($head, $CRLF) + 2, ""); # 2 = length($CRLF)
 
-                my ($doing_chunked, $content_length, $close_connection, $trailer_mode);
+                my ($doing_chunked, $content_length, $trailer_mode, $trailer_value_is_true);
                 for (split /${CRLF}/o, $head) {
                     my ($key, $value) = split /: /, $_, 2;
 
+                    # Figure this out now so we don't need to scan the
+                    # list later under $head_as_array, and just for
+                    # simplicity and to avoid duplicating code later
+                    # when !$head_as_array.
+                    if ($key eq 'Transfer-Encoding' and $value eq 'chunked') {
+                        $doing_chunked = 1;
+                    } elsif ($key eq 'Content-Length') {
+                        $content_length = $value;
+                    } elsif ($key eq 'Connection' and $value eq 'close') {
+                        $close_connection = 1;
+                    } elsif ($key eq 'Trailer' and $value) {
+                        $trailer_value_is_true = 1;
+                    }
+
                     if ($head_as_array) {
                         push @$header => $key, $value;
-
-                        # Figure this out now so we don't need to scan
-                        # the list later.
-                        if ($key eq 'Transfer-Encoding' and $value eq 'chunked') {
-                            $doing_chunked = 1;
-                        } elsif ($key eq 'Content-Length') {
-                            $content_length = $value;
-                        } elsif ($key eq 'Connection' and $value eq 'close') {
-                            $close_connection = 1
-                        } elsif ($doing_chunked and $key eq 'Trailer' and $value) {
-                            $trailer_mode = 1;
-                        }
                     } else {
                         $header->{$key} = $value;
                     }
                 }
 
-                if (($head_as_array and $doing_chunked)
-                    or
-                    (!$head_as_array and ($header->{'Transfer-Encoding'} and $header->{'Transfer-Encoding'} eq 'chunked'))) {
+                # We're processing the headers as a stream, and we
+                # only want to turn on $trailer_mode if
+                # Transfer-Encoding=chunked && Trailer=TRUE. However I
+                # don't think there's any guarantee that
+                # Transfer-Encoding comes before Trailer, so we're
+                # effectively doing a second-pass here.
+                if ($doing_chunked and $trailer_value_is_true) {
+                    $trailer_mode = 1;
+                }
+
+                if ($doing_chunked) {
                     die "PANIC: The experimental Hijk support for chunked transfer encoding needs to be explicitly enabled with parse_chunked => 1"
                         unless $parse_chunked;
 
@@ -113,10 +124,8 @@ sub _read_http_message {
                     );
                 }
 
-                if ($head_as_array and $content_length) {
+                if ($content_length) {
                     $read_length = $content_length - length($body);
-                } elsif (!$head_as_array and $header->{'Content-Length'}) {
-                    $read_length = $header->{'Content-Length'} - length($body);
                 } else {
                     $read_length = 10204;
                     $no_content_len = 1;
@@ -124,7 +133,7 @@ sub _read_http_message {
             }
         }
     } while( !$decapitated || (!$method_is_head && ($read_length > 0 || $no_content_len)) );
-    return (undef, $proto, $status_code, $header, $body);
+    return ($close_connection, $proto, $status_code, $header, $body);
 }
 
 sub _read_chunked_body {

@@ -1,8 +1,21 @@
 0.19: # 
+- Fix a major regression in 0.16. The introduction of "head_as_array"
+  completely broke the disconnection logic when the socket_cache was
+  enabled (which is the default). When talking to a webserver that
+  would disconnect us after N requests request N+1 would always fail
+  with a 0 byte response error.
+
+  This issue was reported as RT #101424
+  (https://rt.cpan.org/Public/Bug/Display.html?id=101424)
+
 - Fix a minor regression in 0.16: The introduction of "head_as_array"
   broke the "proto" part of the return value in a relatively obscure
   edge case where we'd read the header & had no Content-Length and
   couldn't read() anything.
+
+- Fix an edge case in the Trailer support. It would only kick in if we
+  got the Transfer-Encoding header before the "Trailer" header, not
+  the other way around.
 
 0.18: # 2014-12-10T14:00:00+000
 - We now do the right thing on "method => 'HEAD'". I.e. ignore the
