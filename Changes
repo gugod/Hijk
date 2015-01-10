@@ -1,3 +1,9 @@
+0.19: # 
+- Fix a minor regression in 0.16: The introduction of "head_as_array"
+  broke the "proto" part of the return value in a relatively obscure
+  edge case where we'd read the header & had no Content-Length and
+  couldn't read() anything.
+
 0.18: # 2014-12-10T14:00:00+000
 - We now do the right thing on "method => 'HEAD'". I.e. ignore the
   Content-Length parameter, previously we'd just hang trying to slurp

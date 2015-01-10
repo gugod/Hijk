@@ -34,7 +34,7 @@ sub _read_http_message {
             if ((select($rin, undef, undef, $read_timeout) != 1) || (defined($read_timeout) && $read_timeout <= 0));
 
         my $nbytes = POSIX::read($fd, $buf, $read_length);
-        return ($proto, undef, $status_code, $header, $body)
+        return (undef, $proto, $status_code, $header, $body)
             if $no_content_len && $decapitated && (!defined($nbytes) || $nbytes == 0);
         if (!defined($nbytes)) {
             next if ($! == EWOULDBLOCK || $! == EAGAIN);
@@ -336,7 +336,7 @@ sub request {
         $left -= $rc;
     }
 
-    my ($proto,$close_connection,$status,$head,$body,$error,$error_message,$errno_number,$errno_string);
+    my ($close_connection,$proto,$status,$head,$body,$error,$error_message,$errno_number,$errno_string);
     eval {
         ($close_connection,$proto,$status,$head,$body,$error,$error_message,$errno_number,$errno_string) =
         _read_http_message(fileno($soc), @$args{qw(read_length read_timeout parse_chunked head_as_array method)});
