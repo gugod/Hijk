@@ -38,7 +38,7 @@ sub _read_http_message {
         return ($close_connection, $proto, $status_code, $header, $body)
             if $no_content_len && $decapitated && (!defined($nbytes) || $nbytes == 0);
         if (!defined($nbytes)) {
-            next if ($! == EWOULDBLOCK || $! == EAGAIN);
+            next if ($! == EWOULDBLOCK || $! == EAGAIN || $! == EINTR);
             return (
                 $close_connection, undef, 0, undef, undef,
                 Hijk::Error::RESPONSE_READ_ERROR,
@@ -151,7 +151,7 @@ sub _read_chunked_body {
             my $current_buf = "";
             my $nbytes = POSIX::read($fd, $current_buf, $read_length);
             if (!defined($nbytes)) {
-                next if ($! == EWOULDBLOCK || $! == EAGAIN);
+                next if ($! == EWOULDBLOCK || $! == EAGAIN || $! == EINTR);
                 return (
                     undef,
                     Hijk::Error::RESPONSE_READ_ERROR,
@@ -332,7 +332,7 @@ sub request {
 
         my $rc = syswrite($soc,$r,$left, $total - $left);
         if (!defined($rc)) {
-            next if ($! == EWOULDBLOCK || $! == EAGAIN);
+            next if ($! == EWOULDBLOCK || $! == EAGAIN || $! == EINTR);
             delete $args->{socket_cache}->{$cache_key} if defined $cache_key;
             shutdown($soc, 2);
             return {
