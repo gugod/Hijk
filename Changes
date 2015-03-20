@@ -14,6 +14,8 @@
   this "worked" before 0.14, but only accidentally and other types of
   responses wouldn't work.
 
+- We now handle our system calls returning EINTR.
+
 0.19: # 2015-01-10-T18:30:00+0000
 - Fix a major regression in 0.16. The introduction of "head_as_array"
   completely broke the disconnection logic when the socket_cache was
