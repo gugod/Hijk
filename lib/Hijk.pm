@@ -124,8 +124,12 @@ sub _read_http_message {
                     );
                 }
 
-                if ($content_length) {
-                    $read_length = $content_length - length($body);
+                if (defined $content_length) {
+                    if ($content_length == 0) {
+                        $read_length = 0;
+                    } else {
+                        $read_length = $content_length - length($body);
+                    }
                 } else {
                     $read_length = 10204;
                     $no_content_len = 1;
