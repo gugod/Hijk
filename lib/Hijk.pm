@@ -27,7 +27,7 @@ sub _read_http_message {
     my $header = $head_as_array ? [] : {};
     my $no_content_len = 0;
     my $head = "";
-    my $method_is_head = do { no warnings qw(uninitialized); $method eq "HEAD" };
+    my $method_has_no_content = do { no warnings qw(uninitialized); $method eq "HEAD" };
     my $close_connection;
     vec(my $rin = '', $fd, 1) = 1;
     do {
@@ -71,6 +71,7 @@ sub _read_http_message {
                 $head = substr($head, 0, $neck_pos);
                 $proto = substr($head, 0, 8);
                 $status_code = substr($head, 9, 3);
+                $method_has_no_content = 1 if $status_code == 204; # 204 NO CONTENT, see http://tools.ietf.org/html/rfc2616#page-60
                 substr($head, 0, index($head, $CRLF) + 2, ""); # 2 = length($CRLF)
 
                 my ($doing_chunked, $content_length, $trailer_mode, $trailer_value_is_true);
@@ -136,7 +137,7 @@ sub _read_http_message {
                 }
             }
         }
-    } while( !$decapitated || (!$method_is_head && ($read_length > 0 || $no_content_len)) );
+    } while( !$decapitated || (!$method_has_no_content && ($read_length > 0 || $no_content_len)) );
     return ($close_connection, $proto, $status_code, $header, $body);
 }
 

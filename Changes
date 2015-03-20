@@ -1,3 +1,19 @@
+0.20:
+- Fix a regression in 0.14. When the chunked encoding support was
+  introduced we accidentally stopped supporting "Content-Length: 0",
+  treat those responses as the zero-body again. This broke e.g. PUT
+  requests that would return no payload.
+
+- Add support for 204 No Content responses. According to the HTTP
+  standard we must try to consume the body if there's no
+  Content-Length, but not if the server returns a 204 response, then
+  it MUST NOT include a body (see
+  http://tools.ietf.org/html/rfc2616#page-60).
+
+  This re-adds support for e.g. 204 No Content response, in practice
+  this "worked" before 0.14, but only accidentally and other types of
+  responses wouldn't work.
+
 0.19: # 2015-01-10-T18:30:00+0000
 - Fix a major regression in 0.16. The introduction of "head_as_array"
   completely broke the disconnection logic when the socket_cache was
