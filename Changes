@@ -1,4 +1,4 @@
-0.20:
+0.20: # 2015-03-20-T15:10:00+0000
 - Fix a regression in 0.14. When the chunked encoding support was
   introduced we accidentally stopped supporting "Content-Length: 0",
   treat those responses as the zero-body again. This broke e.g. PUT
