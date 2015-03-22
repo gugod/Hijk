@@ -1,6 +1,7 @@
 package Hijk;
 use strict;
 use warnings;
+use Time::HiRes;
 use POSIX qw(:errno_h);
 use Socket qw(PF_INET SOCK_STREAM pack_sockaddr_in inet_ntoa $CRLF SOL_SOCKET SO_ERROR);
 use Fcntl qw(F_GETFL F_SETFL O_NONBLOCK);
@@ -383,7 +384,15 @@ sub request {
 
 sub _select {
     my ($rbits, $wbits, $ebits, $timeout) = @_;
-    return select($rbits, $wbits, $ebits, $timeout);
+    while (1) {
+        my $start = Time::HiRes::time();
+        my $nfound = select($rbits, $wbits, $ebits, $timeout);
+        if ($nfound == -1 && $! == EINTR) {
+            $timeout -= Time::HiRes::time() - $start if $timeout;
+            next;
+        }
+        return $nfound;
+    }
 }
 
 1;
