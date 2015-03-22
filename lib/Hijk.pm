@@ -32,7 +32,7 @@ sub _read_http_message {
     vec(my $rin = '', $fd, 1) = 1;
     do {
         return ($close_connection,undef,0,undef,undef, Hijk::Error::READ_TIMEOUT)
-            if ((select($rin, undef, undef, $read_timeout) != 1) || (defined($read_timeout) && $read_timeout <= 0));
+            if ((_select($rin, undef, undef, $read_timeout) != 1) || (defined($read_timeout) && $read_timeout <= 0));
 
         my $nbytes = POSIX::read($fd, $buf, $read_length);
         return ($close_connection, $proto, $status_code, $header, $body)
@@ -147,7 +147,7 @@ sub _read_chunked_body {
         # just read a 10k block and process it until it is consumed
         if (length($buf) == 0 || length($buf) < $chunk_size) {
             return (undef, Hijk::Error::READ_TIMEOUT)
-                if ((select($rin, undef, undef, $read_timeout) != 1) || (defined($read_timeout) && $read_timeout <= 0));
+                if ((_select($rin, undef, undef, $read_timeout) != 1) || (defined($read_timeout) && $read_timeout <= 0));
             my $current_buf = "";
             my $nbytes = POSIX::read($fd, $current_buf, $read_length);
             if (!defined($nbytes)) {
@@ -243,7 +243,7 @@ sub _construct_socket {
 
     $connect_timeout = undef if defined($connect_timeout) && $connect_timeout <= 0;
     vec(my $rout = '', fileno($soc), 1) = 1;
-    if (select(undef, $rout, undef, $connect_timeout) != 1) {
+    if (_select(undef, $rout, undef, $connect_timeout) != 1) {
         if (defined($connect_timeout)) {
             return (undef, {error => Hijk::Error::CONNECT_TIMEOUT});
         } else {
@@ -320,7 +320,7 @@ sub request {
 
     vec(my $rout = '', fileno($soc), 1) = 1;
     while ($left > 0) {
-        if (select(undef, $rout, undef, undef) != 1) {
+        if (_select(undef, $rout, undef, undef) != 1) {
             delete $args->{socket_cache}->{$cache_key} if defined $cache_key;
             return {
                 error         => Hijk::Error::REQUEST_SELECT_ERROR,
@@ -379,6 +379,11 @@ sub request {
         defined($errno_number) ? ( errno_number => $errno_number ) : (),
         defined($errno_string) ? ( errno_string => $errno_string ) : (),
     };
+}
+
+sub _select {
+    my ($rbits, $wbits, $ebits, $timeout) = @_;
+    return select($rbits, $wbits, $ebits, $timeout);
 }
 
 1;
