@@ -278,15 +278,14 @@ sub _build_http_message {
         $CRLF,
         ($args->{method} || "GET")." $path_and_qs " . ($args->{protocol} || "HTTP/1.1"),
         "Host: $args->{host}",
-        $args->{body} ? ("Content-Length: " . length($args->{body})) : (),
+        defined($args->{body}) ? ("Content-Length: " . length($args->{body})) : (),
         $args->{head} ? (
             map {
                 $args->{head}[2*$_] . ": " . $args->{head}[2*$_+1]
             } 0..$#{$args->{head}}/2
         ) : (),
-        "",
-        $args->{body} ? $args->{body} : ()
-    ) . $CRLF;
+        ""
+    ) . $CRLF . (defined($args->{body}) ? $args->{body} : "");
 }
 
 our $SOCKET_CACHE = {};
