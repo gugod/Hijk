@@ -30,7 +30,7 @@ for my $protocol ("HTTP/1.0", "HTTP/1.1") {
         "GET / $protocol\x0d\x0a".
         "Host: www.example.com\x0d\x0a".
         "Content-Length: 7\x0d\x0a\x0d\x0a".
-        "morning\x0d\x0a";
+        "morning";
 
     is Hijk::_build_http_message({ protocol => $protocol, host => "www.example.com", head => ["X-Head" => "extra stuff"] }),
         "GET / $protocol\x0d\x0a".
@@ -49,7 +49,7 @@ for my $protocol ("HTTP/1.0", "HTTP/1.1") {
         "Content-Length: 4\x0d\x0a".
         "X-Head: extra stuff\x0d\x0a".
         "\x0d\x0a".
-        "OHAI\x0d\x0a";
+        "OHAI";
 }
 
 done_testing;
