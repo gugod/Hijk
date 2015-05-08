@@ -280,8 +280,8 @@ sub _build_http_message {
             } 0..$#{$args->{head}}/2
         ) : (),
         "",
-        $args->{body} ? $args->{body} : ()
-    ) . $CRLF;
+        $args->{body} ? $args->{body} : ""
+    );
 }
 
 our $SOCKET_CACHE = {};
