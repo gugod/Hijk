@@ -7,12 +7,14 @@ use URI;
 
 my ($method, $output_file, $header, $body) = ("GET", "-", "");
 my $timeout = 60;
+my $dump_header;
 GetOptions(
     "method|X=s" => \$method,
     "H=s",       => \$header,
     'd=s',       => \$body,
     "output|o=s" => \$output_file,
     "timeout=s" => \$timeout,
+    "D|dump-header=s" => \$dump_header,
 );
 $method = uc($method);
 
@@ -29,6 +31,14 @@ my $res = Hijk::request {
     query_string => $uri->query,
     $header ? ( head => [split /: /, $header, 2] ) : (),
     $body   ? ( body => $body                    ) : (),
+    parse_chunked => 1,
 };
+
+if ($dump_header) {
+    for (keys %{$res->{head}}) {
+        print "$_: $res->{head}{$_}\n";
+    }
+    print "\n";
+}
 
 print $res->{body};
