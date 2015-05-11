@@ -56,6 +56,17 @@ for my $protocol ("HTTP/1.0", "HTTP/1.1") {
         "${CRLF}".
         "0";
 
+    is Hijk::_build_http_message({ protocol => $protocol, host => "www.example.com", body => undef }),
+        "GET / $protocol${CRLF}".
+        "Host: www.example.com${CRLF}".
+        "${CRLF}";
+
+    is Hijk::_build_http_message({ protocol => $protocol, host => "www.example.com", body => "" }),
+        "GET / $protocol${CRLF}".
+        "Host: www.example.com${CRLF}".
+        "Content-Length: 0${CRLF}".
+        "${CRLF}";
+
     is Hijk::_build_http_message({ protocol => $protocol, host => "www.example.com", head => ["X-Head" => "extra stuff"] }),
         "GET / $protocol${CRLF}".
         "Host: www.example.com${CRLF}".
@@ -74,7 +85,7 @@ for my $protocol ("HTTP/1.0", "HTTP/1.1") {
         "Content-Length: 4${CRLF}".
         "X-Head: extra stuff${CRLF}".
         "${CRLF}".
-        "OHAI${CRLF}";
+        "OHAI";
 }
 
 done_testing;
