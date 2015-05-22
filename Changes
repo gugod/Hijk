@@ -1,3 +1,13 @@
+0.21: # 2015-05-22T15:26:23+0200
+
+- Fix "Too many CRLF" issue. Hijk has been always generating HTTP
+  request with an extra CRLF at the end. While many HTTP servers are
+  ignoring those, some treat it as errors. We now eliminate the extra
+  CRLF at the end of every request.
+  See also http://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html
+
+- Handle better when select() is interrupted by signals.
+
 0.20: # 2015-03-20-T15:10:00+0000
 - Fix a regression in 0.14. When the chunked encoding support was
   introduced we accidentally stopped supporting "Content-Length: 0",
