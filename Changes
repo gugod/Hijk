@@ -1,3 +1,8 @@
+0.22: # 2015-05-27T07:54:17+0200
+
+- No feature change. Re-package due to a missing file in the tarball:
+  https://rt.cpan.org/Ticket/Display.html?id=104624
+
 0.21: # 2015-05-22T15:26:23+0200
 
 - Fix "Too many CRLF" issue. Hijk has been always generating HTTP
