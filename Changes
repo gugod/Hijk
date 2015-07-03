@@ -1,4 +1,11 @@
-0.23
+0.23:
+
+- The "Host" header can now be overriden by supplying a new
+  `no_default_host_header` option along with a `Host` header in `head
+  => []` to request().
+
+  Before this we'd always send "Host: $host" over, where $host was the
+  host we were connecting to, now you can customize this.
 
 - Fixed a bug where if passed passed `head => []` to request() we'd
   emit a ":" header, i.e. just an empty header name with an empty

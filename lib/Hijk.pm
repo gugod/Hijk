@@ -278,7 +278,9 @@ sub _build_http_message {
     return join(
         $CRLF,
         ($args->{method} || "GET")." $path_and_qs " . ($args->{protocol} || "HTTP/1.1"),
-        ((grep { lc($_) eq 'host' } @{ $args->{head} || [] }) ? () : "Host: $args->{host}"),
+        ($args->{no_default_host_header}
+         ? ()
+         : ("Host: $args->{host}")),
         defined($args->{body}) ? ("Content-Length: " . length($args->{body})) : (),
         ($args->{head} and @{$args->{head}}) ? (
             map {
@@ -481,21 +483,22 @@ The C<HashRef> argument to it must contain some of the key-value pairs
 from the following list. The value for C<host> and C<port> are
 mandatory, but others are optional with default values listed below.
 
-    protocol        => "HTTP/1.1", # (or "HTTP/1.0")
-    host            => ...,
-    port            => ...,
-    connect_timeout => undef,
-    read_timeout    => undef,
-    read_length     => 10240,
-    method          => "GET",
-    path            => "/",
-    query_string    => "",
-    head            => [],
-    body            => "",
-    socket_cache    => \%Hijk::SOCKET_CACHE, # (undef to disable, or \my %your_socket_cache)
-    on_connect      => undef, # (or sub { ... })
-    parse_chunked   => 0,
-    head_as_array   => 0,
+    protocol               => "HTTP/1.1", # (or "HTTP/1.0")
+    host                   => ...,
+    port                   => ...,
+    connect_timeout        => undef,
+    read_timeout           => undef,
+    read_length            => 10240,
+    method                 => "GET",
+    path                   => "/",
+    query_string           => "",
+    head                   => [],
+    body                   => "",
+    socket_cache           => \%Hijk::SOCKET_CACHE, # (undef to disable, or \my %your_socket_cache)
+    on_connect             => undef, # (or sub { ... })
+    parse_chunked          => 0,
+    head_as_array          => 0,
+    no_default_host_header => 1,
 
 Notice how Hijk does not take a full URI string as input, you have to
 specify the individual parts of the URL. Users who need to parse an
@@ -516,6 +519,13 @@ Will produce these request headers:
 
     Content-Type: application/json
     X-Requested-With: Hijk
+
+In addition Hijk will provide a C<Host> header for you by default with
+the C<host> value you pass to C<request()>. To suppress this (e.g. to
+send custom C<Host> requests) pass a true value to the
+C<no_default_host_header> option and provide your own C<Host> header
+in the C<head> C<ArrayRef> (or don't, if you want to construct a
+C<Host>-less request knock yourself out...).
 
 Hijk doesn't escape any values for you, it just passes them through
 as-is. You can easily produce invalid requests if e.g. any of these

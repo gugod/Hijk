@@ -88,9 +88,21 @@ for my $protocol ("HTTP/1.0", "HTTP/1.1") {
         "OHAI";
 
     # Allow overriding Host header in head arrayref
-    is Hijk::_build_http_message({ protocol => $protocol, host => "localhost", head => [ "Host" => "www.example.com" ] }),
+    is Hijk::_build_http_message({ protocol => $protocol, host => "localhost", head => [ "Host" => "www.example.com" ], no_default_host_header => 1 }),
         "GET / $protocol${CRLF}".
         "Host: www.example.com${CRLF}${CRLF}";
+
+    # Also allow sending no Host header at all
+    is Hijk::_build_http_message({ protocol => $protocol, host => "localhost", no_default_host_header => 1 }),
+        "GET / $protocol${CRLF}${CRLF}";
+    is Hijk::_build_http_message({ protocol => $protocol, host => "localhost", head => [], no_default_host_header => 1 }),
+        "GET / $protocol${CRLF}${CRLF}";
+
+    # Or even crazy multiple Host headers, whatever that means!
+    is Hijk::_build_http_message({ protocol => $protocol, host => "localhost", head => [ Host => "foo", Host => "bar" ], no_default_host_header => 1 }),
+        "GET / $protocol${CRLF}".
+        "Host: foo${CRLF}".
+        "Host: bar${CRLF}${CRLF}";
 }
 
 done_testing;
