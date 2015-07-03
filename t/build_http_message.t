@@ -86,6 +86,11 @@ for my $protocol ("HTTP/1.0", "HTTP/1.1") {
         "X-Head: extra stuff${CRLF}".
         "${CRLF}".
         "OHAI";
+
+    # Allow overriding Host header in head arrayref
+    is Hijk::_build_http_message({ protocol => $protocol, host => "localhost", head => [ "Host" => "www.example.com" ] }),
+        "GET / $protocol${CRLF}".
+        "Host: www.example.com${CRLF}${CRLF}";
 }
 
 done_testing;
