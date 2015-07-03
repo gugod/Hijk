@@ -280,7 +280,7 @@ sub _build_http_message {
         ($args->{method} || "GET")." $path_and_qs " . ($args->{protocol} || "HTTP/1.1"),
         "Host: $args->{host}",
         defined($args->{body}) ? ("Content-Length: " . length($args->{body})) : (),
-        $args->{head} ? (
+        ($args->{head} and @{$args->{head}}) ? (
             map {
                 $args->{head}[2*$_] . ": " . $args->{head}[2*$_+1]
             } 0..$#{$args->{head}}/2

@@ -1,3 +1,13 @@
+0.23
+
+- Fixed a bug where if passed passed `head => []` to request() we'd
+  emit a ":" header, i.e. just an empty header name with an empty
+  value.
+
+  You could have just not passed the `head => ` value if the array was
+  empty, but no we won't screw up and emit a single line consisting of
+  ":" if given an empty array.
+
 0.22: # 2015-05-27T07:54:17+0200
 
 - No feature change. Re-package due to a missing file in the tarball:
