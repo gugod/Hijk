@@ -278,7 +278,7 @@ sub _build_http_message {
     return join(
         $CRLF,
         ($args->{method} || "GET")." $path_and_qs " . ($args->{protocol} || "HTTP/1.1"),
-        "Host: $args->{host}",
+        ((grep { lc($_) eq 'host' } @{ $args->{head} || [] }) ? () : "Host: $args->{host}"),
         defined($args->{body}) ? ("Content-Length: " . length($args->{body})) : (),
         ($args->{head} and @{$args->{head}}) ? (
             map {
