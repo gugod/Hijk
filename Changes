@@ -1,4 +1,4 @@
-0.23:
+0.23: # 2015-07-03T17:00:00+0200
 
 - The "Host" header can now be overriden by supplying a new
   `no_default_host_header` option along with a `Host` header in `head
