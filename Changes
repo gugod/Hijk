@@ -1,3 +1,8 @@
+0.24: # 2015-07-05T13:40:00+0200
+
+- Minor copyediting and formatting changes to the documentation. No
+  code changes at all.
+
 0.23: # 2015-07-03T17:00:00+0200
 
 - The "Host" header can now be overriden by supplying a new

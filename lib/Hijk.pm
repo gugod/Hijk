@@ -6,7 +6,7 @@ use POSIX qw(:errno_h);
 use Socket qw(PF_INET SOCK_STREAM pack_sockaddr_in inet_ntoa $CRLF SOL_SOCKET SO_ERROR);
 use Fcntl qw(F_GETFL F_SETFL O_NONBLOCK);
 
-our $VERSION = "0.23";
+our $VERSION = "0.24";
 
 sub Hijk::Error::CONNECT_TIMEOUT         () { 1 << 0 } # 1
 sub Hijk::Error::READ_TIMEOUT            () { 1 << 1 } # 2
@@ -589,13 +589,13 @@ the following key-value pairs.
     errno_number  => :Int
     errno_string  => :Str
 
-For example, to send request to
-C<http://example.com/flower?color=red>, do the following:
+For example, to send a request to
+C<http://example.com/flower?color=red>, pass the following parameters:
 
     my $res = Hijk::request({
-        host => "example.com",
-        port => "80",
-        path => "/flower",
+        host         => "example.com",
+        port         => "80",
+        path         => "/flower",
         query_string => "color=red"
     });
     die "Response is not OK" unless $res->{status} == 200;
@@ -676,7 +676,7 @@ message about the error, as well as C<errno_number> & C<errno_string>,
 which are C<$!+0> and C<"$!"> at the time we had the error.
 
 Hijk might encounter other errors during the course of the request and
-C<WILL> call C<die> if that happens, so if you don't want your program
+B<WILL> call C<die> if that happens, so if you don't want your program
 to stop when a request like that fails wrap it in C<eval>.
 
 Having said that the point of the C<Hijk::Error::*> interface is that
