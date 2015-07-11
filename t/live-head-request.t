@@ -5,7 +5,6 @@ use warnings;
 use FindBin;
 
 use Hijk;
-
 use Test::More;
 
 unless ($ENV{TEST_LIVE}) {
@@ -23,7 +22,7 @@ if ($pid == 0) {
     exit;
 }
 
-sleep 5; # hopfully this is enough to launch that psgi.
+sleep 10; # hopfully this is enough to launch that psgi.
 
 my %args = (
     timeout => 1,
