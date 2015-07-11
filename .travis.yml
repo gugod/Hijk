@@ -23,7 +23,7 @@ before_install:
   - cpanm --notest --verbose Module::Install Module::Install::CPANfile Devel::Cover Devel::Cover::Report::Coveralls
 
 script:
-  PERL5OPT=-MDevel::Cover prove -Ilib -r t && cover -report coveralls
+  PERL5OPT=-MDevel::Cover prove -Ilib -v -r t && cover -report coveralls
 
 notifications:
   irc:
