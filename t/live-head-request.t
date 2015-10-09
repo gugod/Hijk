@@ -41,10 +41,7 @@ subtest "expect HEAD response with a Content-Length" => sub {
 subtest "expect HEAD response without a Content-Length" => sub {
     my $res = Hijk::request({%args, query_string => "gimme_content_length="});
     ok !exists $res->{error}, '$res->{error} should not exist because this request should have been successful';
-    TODO: {
-        local $TODO = "I can't figure out how to get plackup(1) not to implicitly add Content-Length";
-        ok !exists $res->{head}->{"Content-Length"}, "We should get no Content-Length";
-    }
+    ok !exists $res->{head}->{"Content-Length"}, "We should get no Content-Length";
     cmp_ok $res->{body}, "eq", "", "Got no body wit the HEAD response, also have no Content-Length";
 };
 
