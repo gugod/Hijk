@@ -1,3 +1,9 @@
+0.26: # 2015-11-25T12:30:00+0100
+
+- No functional changes since 0.25, but we had some Travis-specific
+  changes in the repo, releasing just so we have the latest code there
+  on the CPAN.
+
 0.25: # 2015-11-25T12:20:00+0100
 
 - Make the t/select-timeout.t test which fails on various odd
