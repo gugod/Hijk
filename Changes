@@ -1,3 +1,10 @@
+0.25: # 2015-11-25T12:20:00+0100
+
+- Make the t/select-timeout.t test which fails on various odd
+  CPANtesters platforms a TODO. Maybe some OS-specific issue, maybe an
+  issue with kill() in the CPANtesters sandboxes not behaving as we
+  expect.
+
 0.24: # 2015-07-05T13:40:00+0200
 
 - Minor copyediting and formatting changes to the documentation. No
