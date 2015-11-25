@@ -7,6 +7,10 @@ use Test::Exception;
 use Hijk;
 use Time::HiRes;
 
+if ($^O && $^O !~ /linux/i) {
+    plan skip_all => 'Test is not stable on not Linux platforms';
+};
+
 my $parent_pid = $$;
 pipe(my $rh, my $wh) or die "Failed to create pipe: $!";
 
