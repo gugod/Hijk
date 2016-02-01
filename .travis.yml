@@ -15,10 +15,11 @@ perl:
 env:
   - TEST_ELASTICSEARCH=1 TEST_LIVE=1 TEST_HOST=localhost TEST_PORT=9200
 
+services:
+  - elasticsearch
+
 before_install:
-  - curl --silent -L http://download.elasticsearch.org/elasticsearch/elasticsearch/elasticsearch-0.90.7.tar.gz | tar -xz
-  - ./elasticsearch-0.90.7/bin/elasticsearch
-  - sleep 5
+  - sleep 10
   - yes | perl -MCPAN::FirstTime -e CPAN::FirstTime::init
   - cpanm --notest --verbose Module::Install Module::Install::CPANfile Devel::Cover Devel::Cover::Report::Coveralls
 
