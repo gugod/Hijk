@@ -13,10 +13,11 @@ perl:
   - "5.10"
   - "5.8"
 env:
-  - TEST_ELASTICSEARCH=1 TEST_LIVE=1 TEST_HOST=localhost TEST_PORT=9200
+  - TEST_ELASTICSEARCH=1 TEST_LIVE=1 TEST_HOST=localhost TEST_PORT=9200 TEST_COUCHDB=http://localhost:5984/
 
 services:
   - elasticsearch
+  - couchdb
 
 before_install:
   - sleep 10
