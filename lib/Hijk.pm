@@ -147,11 +147,11 @@ sub _read_chunked_body {
     my $chunk_size   = 0;
     my $body         = "";
     my $trailer_mode = 0;
-
+    my $wait_for_last_clrf = 0;
     vec(my $rin = '', $fd, 1) = 1;
     while(1) {
         # just read a 10k block and process it until it is consumed
-        if (length($buf) == 0 || length($buf) < $chunk_size) {
+        if (length($buf) < 3 || length($buf) < $chunk_size || $wait_for_last_clrf > 0) {
             return (undef, Hijk::Error::READ_TIMEOUT)
                 if ((_select($rin, undef, undef, $read_timeout) != 1) || (defined($read_timeout) && $read_timeout <= 0));
             my $current_buf = "";
@@ -177,6 +177,12 @@ sub _read_chunked_body {
 
             $buf .= $current_buf;
         }
+
+        if ($wait_for_last_clrf > 0) {
+            $wait_for_last_clrf -= length($buf);
+            return $body if ($wait_for_last_clrf <= 0);
+        }
+
         if ($trailer_mode) {
             # http://tools.ietf.org/html/rfc2616#section-14.40
             # http://tools.ietf.org/html/rfc2616#section-3.6.1
@@ -202,7 +208,7 @@ sub _read_chunked_body {
             }
         } else {
             if ($chunk_size > 0 && length($buf) >= $chunk_size) {
-                $body .= substr($buf, 0, $chunk_size - 2); # our chunk size includes the CRLF
+                $body .= substr($buf, 0, $chunk_size - 2); # our chunk size includes the following CRLF
                 $buf = substr($buf, $chunk_size);
                 $chunk_size = 0;
             } else {
@@ -213,12 +219,25 @@ sub _read_chunked_body {
                         if ($true_trailer_header) {
                             $trailer_mode = 1;
                         } else {
-                            return $body;
+                            $buf = substr($buf, $neck_pos + 2);
+                            # in case we are missing the ending CLRF, we have to wait for it
+                            # otherwise it is left int he socket
+                            if (length($buf) < 2) {
+                                $wait_for_last_clrf = 2 - length($buf);
+                            } else {
+                                return $body;
+                            }
                         }
                     } else {
-                        $chunk_size += 2;                  # include the final CRLF
+                        $chunk_size += 2; # include the following CRLF
                         $buf = substr($buf, $neck_pos + 2);
                     }
+                } elsif($neck_pos == 0) {
+                    return (
+                        undef,
+                        Hijk::Error::RESPONSE_BAD_READ_VALUE,
+                        "Wasn't expecting CLRF without chunk size. This shouldn't happen, buf:<$buf>",
+                    );
                 }
             }
         }
