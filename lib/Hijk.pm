@@ -263,7 +263,8 @@ sub _construct_socket {
     fcntl($soc, F_SETFL, $flags | O_NONBLOCK) or die "Failed to set fcntl O_NONBLOCK flag: $!";
 
     if (!connect($soc, $addr) && $! != EINPROGRESS) {
-        die "Failed to connect $!";
+        my $ip = inet_ntoa($addr);
+        die "Failed to connect (host=$host, ip=$ip, port=$port) : $!";
     }
 
     $connect_timeout = undef if defined($connect_timeout) && $connect_timeout <= 0;
@@ -285,7 +286,8 @@ sub _construct_socket {
     }
 
     if ($! = unpack("L", getsockopt($soc, SOL_SOCKET, SO_ERROR))) {
-        die $!;
+        my $ip = inet_ntoa($addr);
+        die "Failed to connect (host=$host, ip=$ip, port=$port) : $!";
     }
 
     return $soc;
