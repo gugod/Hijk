@@ -33,6 +33,14 @@ my %args = (
     method => "GET",
 );
 
+subtest "expect connection failure (mismatching port number)" => sub {
+    dies_ok {
+        # Hopefully port 5002 has no service listening behind :)
+        my $res = Hijk::request({%args, port => 5002, timeout => 10});
+    } 'We connect to wrong port so, as expected, the connection cannot be established.';
+    diag "Dying message: $@";
+};
+
 subtest "expect read timeout" => sub {
     lives_ok {
         my $res = Hijk::request({%args, timeout => 1});
@@ -46,6 +54,7 @@ subtest "do not expect timeout" => sub {
         my $res = Hijk::request({%args, timeout => 10});
     } 'local plack send back something within 10s';
 };
+
 
 END { kill INT => $pid if $pid }
 

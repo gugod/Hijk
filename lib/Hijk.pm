@@ -247,14 +247,13 @@ sub _read_chunked_body {
 sub _construct_socket {
     my ($host, $port, $connect_timeout) = @_;
 
+
     # If we can't find the IP address there'll be no point in even
     # setting up a socket.
-    my $addr;
-    {
-        my $inet_aton = gethostbyname($host);
-        return (undef, {error => Hijk::Error::CANNOT_RESOLVE}) unless defined $inet_aton;
-        $addr = pack_sockaddr_in($port, $inet_aton);
-    }
+    my $ip_aton = gethostbyname($host);
+    return (undef, {error => Hijk::Error::CANNOT_RESOLVE}) unless defined $ip_aton;
+
+    my $addr = pack_sockaddr_in($port, $ip_aton);
 
     my $tcp_proto = getprotobyname("tcp");
     my $soc;
@@ -263,7 +262,7 @@ sub _construct_socket {
     fcntl($soc, F_SETFL, $flags | O_NONBLOCK) or die "Failed to set fcntl O_NONBLOCK flag: $!";
 
     if (!connect($soc, $addr) && $! != EINPROGRESS) {
-        my $ip = inet_ntoa($addr);
+        my $ip = inet_ntoa($ip_aton);
         die "Failed to connect (host=$host, ip=$ip, port=$port) : $!";
     }
 
@@ -286,7 +285,7 @@ sub _construct_socket {
     }
 
     if ($! = unpack("L", getsockopt($soc, SOL_SOCKET, SO_ERROR))) {
-        my $ip = inet_ntoa($addr);
+        my $ip = inet_ntoa($ip_aton);
         die "Failed to connect (host=$host, ip=$ip, port=$port) : $!";
     }
 
