@@ -84,7 +84,7 @@ subtest "with 1ms timeout limit, expect an exception." => sub {
         my $res = Hijk::request({%args, timeout => 0.001});
 
         ok exists $res->{error};
-        is $res->{error}, Hijk::Error::CONNECT_TIMEOUT;
+        ok $res->{error} & Hijk::Error::TIMEOUT;
     };
 };
 
