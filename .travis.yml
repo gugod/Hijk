@@ -20,8 +20,7 @@ services:
   - couchdb
 
 before_install:
-  - sleep 10
-  - yes | perl -MCPAN::FirstTime -e CPAN::FirstTime::init
+  - eval $(curl https://travis-perl.github.io/init) --auto
   - cpanm --notest --verbose Module::Install Module::Install::CPANfile Devel::Cover Devel::Cover::Report::Coveralls
 
 script:
