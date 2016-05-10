@@ -22,6 +22,8 @@ services:
 before_install:
   - eval $(curl https://travis-perl.github.io/init) --auto
   - cpanm --notest --verbose Module::Install Module::Install::CPANfile Devel::Cover Devel::Cover::Report::Coveralls
+  - sleep $(( $RANDOM % 60 ))
+  - date
 
 script:
   PERL5OPT=-MDevel::Cover prove -Ilib -v -r t && cover -report coveralls
