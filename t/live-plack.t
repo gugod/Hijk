@@ -35,8 +35,9 @@ my %args = (
 
 subtest "expect connection failure (mismatching port number)" => sub {
     dies_ok {
-        # Hopefully port 5002 has no service listening behind :)
-        my $res = Hijk::request({%args, port => 5002, timeout => 10});
+        my $port = int 15001+rand()*3000;
+        diag "Connecting to a wrong port: $port";
+        my $res = Hijk::request({%args, port => $port, timeout => 10});
     } 'We connect to wrong port so, as expected, the connection cannot be established.';
     diag "Dying message: $@";
 };
