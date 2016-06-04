@@ -56,7 +56,6 @@ subtest "do not expect timeout" => sub {
     } 'local plack send back something within 10s';
 };
 
-
 END { kill INT => $pid if $pid }
 
 done_testing;
