@@ -447,7 +447,7 @@ A simple GET request:
         die "Oh noes we had some sort of timeout";
     }
 
-    die "Expecting a successful response" unless $res->{status} == 200;
+    die "Expecting an 'OK' response" unless $res->{status} == 200;
 
     say $res->{body};
 
@@ -467,7 +467,7 @@ escape your values etc.
         body         => "description=" . uri_escape("Another flower, let's hope it's exciting"),
     });
 
-    die "Expecting a successful response" unless $res->{status} == 200;
+    die "Expecting an 'OK' response" unless $res->{status} == 200;
 
 =head1 DESCRIPTION
 
@@ -617,7 +617,7 @@ C<http://example.com/flower?color=red>, pass the following parameters:
         path         => "/flower",
         query_string => "color=red"
     });
-    die "Response is not OK" unless $res->{status} == 200;
+    die "Response is not 'OK'" unless $res->{status} == 200;
 
 Notice that you do not need to put the leading C<"?"> character in the
 C<query_string>. You do, however, need to properly C<uri_escape> the content of
