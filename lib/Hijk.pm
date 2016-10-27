@@ -78,18 +78,19 @@ sub _read_http_message {
                 my ($doing_chunked, $content_length, $trailer_mode, $trailer_value_is_true);
                 for (split /${CRLF}/o, $head) {
                     my ($key, $value) = split /: /, $_, 2;
+                    my $key_lc = lc($key);
 
                     # Figure this out now so we don't need to scan the
                     # list later under $head_as_array, and just for
                     # simplicity and to avoid duplicating code later
                     # when !$head_as_array.
-                    if ($key eq 'Transfer-Encoding' and $value eq 'chunked') {
+                    if ($key_lc eq 'transfer-encoding' and $value eq 'chunked') {
                         $doing_chunked = 1;
-                    } elsif ($key eq 'Content-Length') {
+                    } elsif ( ($key_lc eq 'content-length') || (lc($key) eq 'content-length') ) {
                         $content_length = $value;
-                    } elsif ($key eq 'Connection' and $value eq 'close') {
+                    } elsif ($key_lc eq 'connection' and $value eq 'close') {
                         $close_connection = 1;
-                    } elsif ($key eq 'Trailer' and $value) {
+                    } elsif ($key_lc eq 'trailer' and $value) {
                         $trailer_value_is_true = 1;
                     }
 
