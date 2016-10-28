@@ -1,1 +1,1 @@
-steps = DistClean, Manifest, CheckChangeLog, DistTest, MakeDist, UploadCPAN
+steps = CheckChangeLog, DistTest, MakeDist, UploadCPAN

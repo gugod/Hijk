@@ -1,5 +1,6 @@
 requires "Time::HiRes";
 
+test_requires "Module::Install::CPANfile";
 test_requires "Test::More";
 test_requires "Test::Exception";
 test_requires "Plack";

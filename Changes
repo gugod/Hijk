@@ -1,3 +1,7 @@
+0.27: # 2016-10-28T12:59:00+0100
+
+- Unbreak with Elasticeasrch 5.0. See https://rt.cpan.org/Public/Bug/Display.html?id=118425
+
 0.26: # 2015-11-25T12:30:00+0100
 
 - No functional changes since 0.25, but we had some Travis-specific
