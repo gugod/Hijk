@@ -8,16 +8,16 @@ use Fcntl qw(F_GETFL F_SETFL O_NONBLOCK);
 
 our $VERSION = "0.27";
 
-sub Hijk::Error::CONNECT_TIMEOUT         () { 1 << 0 } # 1
-sub Hijk::Error::READ_TIMEOUT            () { 1 << 1 } # 2
-sub Hijk::Error::TIMEOUT                 () { Hijk::Error::READ_TIMEOUT | Hijk::Error::CONNECT_TIMEOUT } # 3
-sub Hijk::Error::CANNOT_RESOLVE          () { 1 << 2 } # 4
-sub Hijk::Error::REQUEST_SELECT_ERROR    () { 1 << 3 } # 8
-sub Hijk::Error::REQUEST_WRITE_ERROR     () { 1 << 4 } # 16
-sub Hijk::Error::REQUEST_ERROR           () { Hijk::Error::REQUEST_SELECT_ERROR |  Hijk::Error::REQUEST_WRITE_ERROR } # 24
-sub Hijk::Error::RESPONSE_READ_ERROR     () { 1 << 5 } # 32
-sub Hijk::Error::RESPONSE_BAD_READ_VALUE () { 1 << 6 } # 64
-sub Hijk::Error::RESPONSE_ERROR          () { Hijk::Error::RESPONSE_READ_ERROR | Hijk::Error::RESPONSE_BAD_READ_VALUE } # 96
+sub Hijk::Error::CONNECT_TIMEOUT         () { return 1 << 0 } # 1
+sub Hijk::Error::READ_TIMEOUT            () { return 1 << 1 } # 2
+sub Hijk::Error::TIMEOUT                 () { return Hijk::Error::READ_TIMEOUT | Hijk::Error::CONNECT_TIMEOUT } # 3
+sub Hijk::Error::CANNOT_RESOLVE          () { return 1 << 2 } # 4
+sub Hijk::Error::REQUEST_SELECT_ERROR    () { return 1 << 3 } # 8
+sub Hijk::Error::REQUEST_WRITE_ERROR     () { return 1 << 4 } # 16
+sub Hijk::Error::REQUEST_ERROR           () { return Hijk::Error::REQUEST_SELECT_ERROR |  Hijk::Error::REQUEST_WRITE_ERROR } # 24
+sub Hijk::Error::RESPONSE_READ_ERROR     () { return 1 << 5 } # 32
+sub Hijk::Error::RESPONSE_BAD_READ_VALUE () { return 1 << 6 } # 64
+sub Hijk::Error::RESPONSE_ERROR          () { return Hijk::Error::RESPONSE_READ_ERROR | Hijk::Error::RESPONSE_BAD_READ_VALUE } # 96
 
 sub _read_http_message {
     my ($fd, $read_length, $read_timeout, $parse_chunked, $head_as_array, $method) = @_;
@@ -28,7 +28,7 @@ sub _read_http_message {
     my $header = $head_as_array ? [] : {};
     my $no_content_len = 0;
     my $head = "";
-    my $method_has_no_content = do { no warnings qw(uninitialized); $method eq "HEAD" };
+    my $method_has_no_content = $method and $method eq "HEAD" ? 1 : 0;
     my $close_connection;
     vec(my $rin = '', $fd, 1) = 1;
     do {
@@ -243,6 +243,8 @@ sub _read_chunked_body {
             }
         }
     }
+
+	return;
 }
 
 sub _construct_socket {
@@ -285,7 +287,7 @@ sub _construct_socket {
         }
     }
 
-    if ($! = unpack("L", getsockopt($soc, SOL_SOCKET, SO_ERROR))) {
+    if (local $! = unpack("L", getsockopt($soc, SOL_SOCKET, SO_ERROR))) {
         die $!;
     }
 
@@ -293,7 +295,7 @@ sub _construct_socket {
 }
 
 sub _build_http_message {
-    my $args = $_[0];
+    my ( $args ) = @_;
     my $path_and_qs = ($args->{path} || "/") . ( defined($args->{query_string}) ? ("?".$args->{query_string}) : "" );
     return join(
         $CRLF,
@@ -314,7 +316,7 @@ sub _build_http_message {
 our $SOCKET_CACHE = {};
 
 sub request {
-    my $args = $_[0];
+    my ( $args ) = @_;
 
     # Backwards compatibility for code that provided the old timeout
     # argument.
@@ -419,6 +421,8 @@ sub _select {
         }
         return $nfound;
     }
+
+	return 0;
 }
 
 1;
