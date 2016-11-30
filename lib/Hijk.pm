@@ -140,7 +140,7 @@ sub _read_http_message {
             }
         }
     } while( !$decapitated || (!$method_has_no_content && ($read_length > 0 || $no_content_len)) );
-    return ($close_connection, $proto, $status_code, $header, $body);
+    return ($close_connection, $proto, $status_code, $header, $method_has_no_content ? '' : $body);
 }
 
 sub _read_chunked_body {
