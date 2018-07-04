@@ -1,4 +1,4 @@
-sudo: required
+sudo: false
 
 language: perl
 perl:
@@ -25,12 +25,12 @@ services:
 
 before_install:
   - sleep $(( $RANDOM % 60 ))
-  - eval $(curl https://travis-perl.github.io/init) --auto
+  - eval $(curl https://travis-perl.github.io/init) --perl
   - cpanm --notest --verbose App::ModuleBuildTiny Devel::Cover Devel::Cover::Report::Coveralls
   - mbtiny listdeps | cpanm --notest --verbose
 
 script:
-  PERL5OPT=-MDevel::Cover prove -Ilib -v -r t && cover -report coveralls
+  PERL5OPT=-MDevel::Cover prove -l -v -r t && cover -report coveralls
 
 notifications:
   irc:
