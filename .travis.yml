@@ -25,7 +25,10 @@ services:
 
 before_install:
   - sleep $(( $RANDOM % 60 ))
-  - eval $(curl https://travis-perl.github.io/init) --perl
+  - git clone git://github.com/travis-perl/helpers ~/travis-perl-helpers
+  - source ~/travis-perl-helpers/init
+  - build-perl
+  - perl -V
   - cpanm --notest --verbose App::ModuleBuildTiny Devel::Cover Devel::Cover::Report::Coveralls
   - mbtiny listdeps | cpanm --notest --verbose
 
