@@ -1,7 +1,12 @@
 requires "Time::HiRes";
 
-test_requires "Module::Install::CPANfile";
-test_requires "Test::More";
-test_requires "Test::Exception";
-test_requires "Plack";
-test_requires "Net::Ping", '2.41';
+on configure => sub {
+   requires "Module::Build::Tiny";
+};
+
+on test => sub {
+    requires "Test::More";
+    requires "Test::Exception";
+    requires "Plack";
+    requires "Net::Ping", '2.41';
+};

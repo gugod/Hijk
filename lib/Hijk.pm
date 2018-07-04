@@ -731,7 +731,7 @@ e.g. C<fcntl()> failing on a valid socket.
 
 =head1 COPYRIGHT
 
-Copyright (c) 2013 Kang-min Liu C<< <gugod@gugod.org> >>.
+Copyright (c) 2013- Kang-min Liu C<< <gugod@gugod.org> >>.
 
 =head1 LICENCE
 
