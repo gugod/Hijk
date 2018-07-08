@@ -6,6 +6,10 @@ use Hijk;
 use Test::More;
 use Test::Exception;
 
+unless ($ENV{TEST_UNIXIS}) {
+    plan skip_all => "Enable live testing by setting env: TEST_UNIXIS=1";
+}
+
 unless ($ENV{TEST_LIVE}) {
     plan skip_all => "Enable live testing by setting env: TEST_LIVE=1";
 }
