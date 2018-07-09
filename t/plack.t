@@ -9,31 +9,36 @@ use Hijk;
 use Test::More;
 use Test::Exception;
 
+my $port = 10000 + int rand(5000);
+
 my $pid = fork;
 die "Fail to fork then start a plack server" unless defined $pid;
 
 if ($pid == 0) {
     require Plack::Runner;
     my $runner = Plack::Runner->new;
-    $runner->parse_options("--port", "5001", "$FindBin::Bin/bin/it-takes-time.psgi");
+    $runner->parse_options("--port", $port, "$FindBin::Bin/bin/it-takes-time.psgi");
     $runner->run;
     exit;
 }
 
-sleep 5; # hopfully this is enough to launch that psgi.
+sleep 10; # hopfully this is enough to launch that psgi.
 
 my %args = (
     host => "localhost",
-    port => "5001",
+    port => $port,
     query_string => "t=5",
     method => "GET",
 );
 
 subtest "expect connection failure (mismatching port number)" => sub {
     dies_ok {
-        my $port = int 15001+rand()*3000;
+        my $port_wrong = $port;
+        while ($port_wrong == $port) {
+            $port_wrong = int( 15001+rand()*3000 );
+        }
         diag "Connecting to a wrong port: $port";
-        my $res = Hijk::request({%args, port => $port, timeout => 10});
+        my $res = Hijk::request({%args, port => $port_wrong, timeout => 10});
     } 'We connect to wrong port so, as expected, the connection cannot be established.';
     diag "Dying message: $@";
 };
