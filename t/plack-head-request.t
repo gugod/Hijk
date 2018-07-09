@@ -7,9 +7,7 @@ use FindBin;
 use Hijk;
 use Test::More;
 
-unless ($ENV{TEST_LIVE}) {
-    plan skip_all => "Enable live testing by setting env: TEST_LIVE=1";
-}
+my $port = 10000 + int rand(5000);
 
 my $pid = fork;
 die "Fail to fork then start a plack server" unless defined $pid;
@@ -17,7 +15,7 @@ die "Fail to fork then start a plack server" unless defined $pid;
 if ($pid == 0) {
     require Plack::Runner;
     my $runner = Plack::Runner->new;
-    $runner->parse_options("--port", "5002", "$FindBin::Bin/bin/head-request.psgi");
+    $runner->parse_options("--port", $port, "$FindBin::Bin/bin/head-request.psgi");
     $runner->run;
     exit;
 }
@@ -27,7 +25,7 @@ sleep 10; # hopfully this is enough to launch that psgi.
 my %args = (
     timeout => 1,
     host    => "localhost",
-    port    => "5002",
+    port    => $port,
     method  => "HEAD",
 );
 
