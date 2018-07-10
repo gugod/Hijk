@@ -15,12 +15,12 @@ die "Fail to fork then start a plack server" unless defined $pid;
 if ($pid == 0) {
     require Plack::Runner;
     my $runner = Plack::Runner->new;
-    $runner->parse_options("--port", $port, "$FindBin::Bin/bin/head-request.psgi");
+    $runner->parse_options("--server", "HTTP::Server::Simple", "--port", $port, "$FindBin::Bin/bin/head-request.psgi");
     $runner->run;
     exit;
 }
 
-sleep 10; # hopfully this is enough to launch that psgi.
+sleep 2; # hopfully this is enough to launch that psgi.
 
 my %args = (
     timeout => 1,
@@ -32,17 +32,23 @@ my %args = (
 subtest "expect HEAD response with a Content-Length" => sub {
     my $res = Hijk::request({%args, query_string => "gimme_content_length=1"});
     ok !exists $res->{error}, '$res->{error} should not exist because this request should have been successful';
-    cmp_ok $res->{head}->{"Content-Length"}, "==", 11, "Got a Content-Length";
-    cmp_ok $res->{body}, "eq", "", "Got no body even though we had a Content-Length";
+    ok defined($res->{head}->{"Content-Length"}), "Got a Content-Length";
+
+    cmp_ok $res->{body}, "eq", "", "Got no body even though we had a Content-Length header";
+
+    if ($res->{head}->{"Content-Length"} == 0) {
+        pass 'Content-Length: 0, looks OK because this response has no http body';
+    } elsif ($res->{head}->{"Content-Length"} == 11) {
+        pass 'Content-Length: 11, looks OK because it is the length of body should this be a GET request';
+    } else {
+        fail "Content-Length: " . $res->{head}->{'Content-Length'} . ' does not look like a legit value.';
+    }
 };
 
 subtest "expect HEAD response without a Content-Length" => sub {
     my $res = Hijk::request({%args, query_string => "gimme_content_length="});
     ok !exists $res->{error}, '$res->{error} should not exist because this request should have been successful';
-    TODO: {
-        local $TODO = "I can't figure out how to get plackup(1) not to implicitly add Content-Length";
-        ok !exists $res->{head}->{"Content-Length"}, "We should get no Content-Length";
-    }
+    ok !exists $res->{head}->{"Content-Length"}, "We should get no Content-Length";
     cmp_ok $res->{body}, "eq", "", "Got no body wit the HEAD response, also have no Content-Length";
 };
 

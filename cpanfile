@@ -8,5 +8,6 @@ on test => sub {
     requires "Test::More";
     requires "Test::Exception";
     requires "Plack";
+    requires "HTTP::Server::Simple::PSGI";
     requires "Net::Ping", '2.41';
 };
