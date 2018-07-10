@@ -6,6 +6,10 @@ use warnings;
 use Hijk;
 use Test::More;
 
+if ($ENV{TRAVIS} && $ENV{TRAVIS_OS_NAME} eq 'osx') {
+    plan skip_all => "No elasticsearch service in this environment at the moment.";
+}
+
 unless ($ENV{TEST_LIVE}) {
     plan skip_all => "Enable live testing by setting env: TEST_LIVE=1";
 }
