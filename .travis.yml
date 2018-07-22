@@ -32,7 +32,7 @@ before_install:
   - cpanm --notest Devel::Cover Devel::Cover::Report::Coveralls
 
 script:
-  PERL5OPT=-MDevel::Cover prove -l -v -r t && cover -report coveralls
+  if [[ "$TRAVIS_PERL_VERSION" != "5.8" ]]; then PERL5OPT=-MDevel::Cover prove -l -v -r t && cover -report coveralls; else prove -lrv t; fi
 
 notifications:
   irc:
@@ -42,3 +42,11 @@ notifications:
 
 git:
   depth: 1
+
+matrix:
+  allow_failures:
+    - perl: 5.8
+    - os: osx
+      perl: 5.20-shrplib
+    - os: osx
+      perl: 5.18-shrplib
