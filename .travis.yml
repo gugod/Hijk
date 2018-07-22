@@ -1,4 +1,6 @@
-sudo: false
+os:
+  - linux
+  - osx
 
 language: perl
 perl:
@@ -24,16 +26,13 @@ services:
   - couchdb
 
 before_install:
-  - sleep $(( $RANDOM % 60 ))
-  - git clone git://github.com/travis-perl/helpers ~/travis-perl-helpers
-  - source ~/travis-perl-helpers/init
-  - build-perl
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then curl -L https://install.perlbrew.pl | bash ; source $HOME/perl5/perlbrew/etc/bashrc; perlbrew install -j4 --notest --as perl-$TRAVIS_PERL_VERSION $(perlbrew available | grep $TRAVIS_PERL_VERSION | cut -c4- | head -1); perlbrew clean; perlbrew install-cpanm; perlbrew use "$TRAVIS_PERL_VERSION"; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then git clone git://github.com/travis-perl/helpers ~/travis-perl-helpers; source ~/travis-perl-helpers/init; build-perl; fi
   - perl -V
-  - cpanm --notest --verbose App::ModuleBuildTiny Devel::Cover Devel::Cover::Report::Coveralls
-  - mbtiny listdeps | cpanm --notest --verbose
+  - cpanm --notest Devel::Cover Devel::Cover::Report::Coveralls Test::More~0.98
 
 script:
-  PERL5OPT=-MDevel::Cover prove -l -v -r t && cover -report coveralls
+  if [[ "$TRAVIS_PERL_VERSION" != "5.8" ]]; then PERL5OPT=-MDevel::Cover prove -l -v -r t && cover -report coveralls; else prove -lrv t; fi
 
 notifications:
   irc:
@@ -43,3 +42,11 @@ notifications:
 
 git:
   depth: 1
+
+matrix:
+  allow_failures:
+    - perl: 5.8
+    - os: osx
+      perl: 5.20-shrplib
+    - os: osx
+      perl: 5.18-shrplib

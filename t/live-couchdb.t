@@ -7,6 +7,10 @@ use Hijk;
 use URI;
 use Time::HiRes 'time';
 
+if ($ENV{TRAVIS} && $ENV{TRAVIS_OS_NAME} eq 'osx') {
+    plan skip_all => "No elasticsearch service in this environment at the moment.";
+}
+
 plan skip_all => "Enable live testing by setting env: TEST_LIVE=1" unless $ENV{TEST_LIVE};
 plan skip_all => "Enable live CouchDB testing by setting env: TEST_COUCHDB=http://localhost:5984/" unless $ENV{TEST_COUCHDB};
 
