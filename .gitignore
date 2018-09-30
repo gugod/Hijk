@@ -1,8 +1,5 @@
 MANIFEST
-META.yml
-META.json
-MYMETA.yml
-MYMETA.json
+MYMETA.*
 Makefile
 Makefile.old
 inc
