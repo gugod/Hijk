@@ -1,12 +1,10 @@
 ---
 abstract: 'Fast & minimal low-level HTTP client'
 author:
-  - '=over 4'
-  - '=item Kang-min Liu <gugod@gugod.org>'
-  - "=item Ã\x86var ArnfjÃÂ¶rÃÂ° Bjarmason <avar@cpan.org>"
-  - '=item Borislav Nikolov <jack@sofialondonmoskva.com>'
-  - '=item Damian Gryski <damian@gryski.com>'
-  - =back
+  - 'Kang-min Liu <gugod@gugod.org>'
+  - "Ævar Arnfjörð Bjarmason <avar@cpan.org>"
+  - 'Borislav Nikolov <jack@sofialondonmoskva.com>'
+  - 'Damian Gryski <damian@gryski.com>'
 build_requires:
   HTTP::Server::Simple::PSGI: '0'
   Net::Ping: '2.41'
