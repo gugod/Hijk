@@ -717,17 +717,13 @@ e.g. C<fcntl()> failing on a valid socket.
 
 =head1 AUTHORS
 
-=over 4
+Kang-min Liu <gugod@gugod.org>
 
-=item Kang-min Liu <gugod@gugod.org>
+Ævar Arnfjörð Bjarmason <avar@cpan.org>
 
-=item Ævar Arnfjörð Bjarmason <avar@cpan.org>
+Borislav Nikolov <jack@sofialondonmoskva.com>
 
-=item Borislav Nikolov <jack@sofialondonmoskva.com>
-
-=item Damian Gryski <damian@gryski.com>
-
-=back
+Damian Gryski <damian@gryski.com>
 
 =head1 COPYRIGHT
 
