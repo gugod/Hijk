@@ -1,0 +1,62 @@
+{
+   "abstract" : "Fast & minimal low-level HTTP client",
+   "author" : [
+      "Kang-min Liu <gugod@gugod.org>",
+      "Ævar Arnfjörð Bjarmason <avar@cpan.org>",
+      "Borislav Nikolov <jack@sofialondonmoskva.com>",
+      "Damian Gryski <damian@gryski.com>"
+   ],
+   "dynamic_config" : 0,
+   "generated_by" : "App::ModuleBuildTiny version 0.023",
+   "license" : [
+      "mit"
+   ],
+   "meta-spec" : {
+      "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
+      "version" : 2
+   },
+   "name" : "Hijk",
+   "prereqs" : {
+      "configure" : {
+         "requires" : {
+            "Module::Build::Tiny" : "0"
+         }
+      },
+      "develop" : {
+         "requires" : {
+            "App::ModuleBuildTiny" : "0.023"
+         }
+      },
+      "runtime" : {
+         "requires" : {
+            "Time::HiRes" : "0"
+         }
+      },
+      "test" : {
+         "requires" : {
+            "HTTP::Server::Simple::PSGI" : "0",
+            "Net::Ping" : "2.41",
+            "Plack" : "0",
+            "Test::Exception" : "0",
+            "Test::More" : "0"
+         }
+      }
+   },
+   "provides" : {
+      "Hijk" : {
+         "file" : "lib/Hijk.pm",
+         "version" : "0.27"
+      }
+   },
+   "release_status" : "stable",
+   "resources" : {
+      "repository" : {
+         "type" : "git",
+         "url" : "https://github.com/gugod/Hijk.git",
+         "web" : "https://github.com/gugod/Hijk"
+      }
+   },
+   "version" : "0.27",
+   "x_serialization_backend" : "JSON::PP version 2.97001",
+   "x_static_install" : "1"
+}
