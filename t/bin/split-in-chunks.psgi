@@ -24,7 +24,6 @@ sub {
         my $responder = shift;
         my $writer = $responder->([ 200, [ 'Content-Type', 'text/plain' ]]);
 
-        my @chunks;
         while($epic_graph) {
             my $l = rand() * 30 + 1;
             my $chunk = substr($epic_graph, 0, $l, '');
