@@ -9,7 +9,6 @@ use parent 'Net::Server::HTTP';
 my $port = $ARGV[0] // '3000';
 __PACKAGE__->run( port => $port );;
 
-use Data::Dumper qw(Dumper);
 sub process_http_request {
     my $self = shift;
 
