@@ -17,9 +17,11 @@ sub process_http_request {
     if ($gimme) {
         print "Content-type: text/plain\n";
         print "Content-Length: 11\n\n";
-        print "Hello World\n";
     } else {
         print "Content-type: text/plain\n\n";
+    }
+
+    if ($self->{request_info}{request_method} ne 'HEAD') {
         print "Hello World\n";
     }
 }
