@@ -10,4 +10,5 @@ on test => sub {
     requires "Plack";
     requires "HTTP::Server::Simple::PSGI";
     requires "Net::Ping", '2.41';
+    requires 'Net::Server::HTTP';
 };
