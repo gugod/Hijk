@@ -3,11 +3,19 @@
 use strict;
 use warnings;
 
-use parent 'Net::Server::HTTP';
+BEGIN {
+    if ($] < 5.010010) {
+        require base;
+        base->import('Net::Server::HTTP');
+    } else {
+        require parent;
+        parent->import('Net::Server::HTTP');
+    }
+}
 
 
-my $port = $ARGV[0] // '3000';
-__PACKAGE__->run( port => $port );;
+my $port = $ARGV[0] || '3000';
+__PACKAGE__->run( port => $port );
 
 sub process_http_request {
     my $self = shift;
