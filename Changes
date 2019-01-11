@@ -1,6 +1,9 @@
-- Now the distribution is made with mbtiny.
-- Various improvements of the test suite.
-- Rewrite the internally-used testing-purpose HTTP server to allow the control of 'Content-Length' request header.
+0.28
+
+	- Released at 2019-01-11T16:25:00+0900
+	- Now the distribution is made with mbtiny.
+	- Various improvements of the test suite.
+	- Rewrite the internally-used testing-purpose HTTP server to allow the control of 'Content-Length' request header.
 
 0.27: # 2016-10-28T12:59:00+0100
 
