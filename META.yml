@@ -2,19 +2,20 @@
 abstract: 'Fast & minimal low-level HTTP client'
 author:
   - 'Kang-min Liu <gugod@gugod.org>'
-  - "Ævar Arnfjörð Bjarmason <avar@cpan.org>"
+  - 'Ævar Arnfjörð Bjarmason <avar@cpan.org>'
   - 'Borislav Nikolov <jack@sofialondonmoskva.com>'
   - 'Damian Gryski <damian@gryski.com>'
 build_requires:
   HTTP::Server::Simple::PSGI: '0'
   Net::Ping: '2.41'
+  Net::Server::HTTP: '0'
   Plack: '0'
   Test::Exception: '0'
   Test::More: '0'
 configure_requires:
   Module::Build::Tiny: '0'
 dynamic_config: 0
-generated_by: 'App::ModuleBuildTiny version 0.023, CPAN::Meta::Converter version 2.150010'
+generated_by: 'App::ModuleBuildTiny version 0.025, CPAN::Meta::Converter version 2.150010'
 license: mit
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
@@ -23,11 +24,13 @@ name: Hijk
 provides:
   Hijk:
     file: lib/Hijk.pm
-    version: '0.27'
+    version: '0.28'
 requires:
   Time::HiRes: '0'
 resources:
+  bugtracker: https://github.com/gugod/Hijk/issues
   repository: https://github.com/gugod/Hijk.git
-version: '0.27'
+version: '0.28'
 x_serialization_backend: 'CPAN::Meta::YAML version 0.018'
+x_spdx_expression: MIT
 x_static_install: '1'

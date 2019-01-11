@@ -7,7 +7,7 @@
       "Damian Gryski <damian@gryski.com>"
    ],
    "dynamic_config" : 0,
-   "generated_by" : "App::ModuleBuildTiny version 0.023",
+   "generated_by" : "App::ModuleBuildTiny version 0.025",
    "license" : [
       "mit"
    ],
@@ -24,7 +24,7 @@
       },
       "develop" : {
          "requires" : {
-            "App::ModuleBuildTiny" : "0.023"
+            "App::ModuleBuildTiny" : "0.025"
          }
       },
       "runtime" : {
@@ -36,6 +36,7 @@
          "requires" : {
             "HTTP::Server::Simple::PSGI" : "0",
             "Net::Ping" : "2.41",
+            "Net::Server::HTTP" : "0",
             "Plack" : "0",
             "Test::Exception" : "0",
             "Test::More" : "0"
@@ -45,18 +46,22 @@
    "provides" : {
       "Hijk" : {
          "file" : "lib/Hijk.pm",
-         "version" : "0.27"
+         "version" : "0.28"
       }
    },
    "release_status" : "stable",
    "resources" : {
+      "bugtracker" : {
+         "web" : "https://github.com/gugod/Hijk/issues"
+      },
       "repository" : {
          "type" : "git",
          "url" : "https://github.com/gugod/Hijk.git",
          "web" : "https://github.com/gugod/Hijk"
       }
    },
-   "version" : "0.27",
+   "version" : "0.28",
    "x_serialization_backend" : "JSON::PP version 2.97001",
+   "x_spdx_expression" : "MIT",
    "x_static_install" : "1"
 }
