@@ -1,3 +1,7 @@
+- Now the distribution is made with mbtiny.
+- Various improvements of the test suite.
+- Rewrite the internally-used testing-purpose HTTP server to allow the control of 'Content-Length' request header.
+
 0.27: # 2016-10-28T12:59:00+0100
 
 - Unbreak with Elasticeasrch 5.0. See https://rt.cpan.org/Public/Bug/Display.html?id=118425
