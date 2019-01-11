@@ -1,6 +1,9 @@
 {
     "x_static_install": true,
     "resources": {
+        "bugtracker": {
+            "web": "https://github.com/gugod/Hijk/issues"
+        },
         "repository": {
             "web": "https://github.com/gugod/Hijk",
             "url": "https://github.com/gugod/Hijk.git",
