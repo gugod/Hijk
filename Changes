@@ -5,224 +5,273 @@
 	- Various improvements of the test suite.
 	- Rewrite the internally-used testing-purpose HTTP server to allow the control of 'Content-Length' request header.
 
-0.27: # 2016-10-28T12:59:00+0100
+0.27
 
-- Unbreak with Elasticeasrch 5.0. See https://rt.cpan.org/Public/Bug/Display.html?id=118425
+	- Released at 2016-10-28T12:59:00+0100
+	- Unbreak with Elasticeasrch 5.0. See https://rt.cpan.org/Public/Bug/Display.html?id=118425
 
-0.26: # 2015-11-25T12:30:00+0100
+0.26
 
-- No functional changes since 0.25, but we had some Travis-specific
-  changes in the repo, releasing just so we have the latest code there
-  on the CPAN.
+	- Released at 2015-11-25T12:30:00+0100
+	- No functional changes since 0.25, but we had some Travis-specific
+	  changes in the repo, releasing just so we have the latest code there
+	  on the CPAN.
 
-0.25: # 2015-11-25T12:20:00+0100
+0.25
 
-- Make the t/select-timeout.t test which fails on various odd
-  CPANtesters platforms a TODO. Maybe some OS-specific issue, maybe an
-  issue with kill() in the CPANtesters sandboxes not behaving as we
-  expect.
+	- Released at 2015-11-25T12:20:00+0100
 
-0.24: # 2015-07-05T13:40:00+0200
+	- Make the t/select-timeout.t test which fails on various odd
+	  CPANtesters platforms a TODO. Maybe some OS-specific issue, maybe an
+	  issue with kill() in the CPANtesters sandboxes not behaving as we
+	  expect.
 
-- Minor copyediting and formatting changes to the documentation. No
-  code changes at all.
+0.24
 
-0.23: # 2015-07-03T17:00:00+0200
+	- Released at 2015-07-05T13:40:00+0200
 
-- The "Host" header can now be overriden by supplying a new
-  `no_default_host_header` option along with a `Host` header in `head
-  => []` to request().
+	- Minor copyediting and formatting changes to the documentation. No
+	  code changes at all.
 
-  Before this we'd always send "Host: $host" over, where $host was the
-  host we were connecting to, now you can customize this.
+0.23
 
-- Fixed a bug where if passed passed `head => []` to request() we'd
-  emit a ":" header, i.e. just an empty header name with an empty
-  value.
+	- Released at 2015-07-03T17:00:00+0200
 
-  You could have just not passed the `head => ` value if the array was
-  empty, but no we won't screw up and emit a single line consisting of
-  ":" if given an empty array.
+	- The "Host" header can now be overriden by supplying a new
+	  `no_default_host_header` option along with a `Host` header in `head
+	  => []` to request().
 
-0.22: # 2015-05-27T07:54:17+0200
+	  Before this we'd always send "Host: $host" over, where $host was the
+	  host we were connecting to, now you can customize this.
 
-- No feature change. Re-package due to a missing file in the tarball:
-  https://rt.cpan.org/Ticket/Display.html?id=104624
+	- Fixed a bug where if passed passed `head => []` to request() we'd
+	  emit a ":" header, i.e. just an empty header name with an empty
+	  value.
 
-0.21: # 2015-05-22T15:26:23+0200
+	  You could have just not passed the `head => ` value if the array was
+	  empty, but no we won't screw up and emit a single line consisting of
+	  ":" if given an empty array.
 
-- Fix "Too many CRLF" issue. Hijk has been always generating HTTP
-  request with an extra CRLF at the end. While many HTTP servers are
-  ignoring those, some treat it as errors. We now eliminate the extra
-  CRLF at the end of every request.
-  See also http://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html
+0.22
 
-- Handle better when select() is interrupted by signals.
+	- Released at 2015-05-27T07:54:17+0200
+	- No feature change. Re-package due to a missing file in the tarball:
+	  https://rt.cpan.org/Ticket/Display.html?id=104624
 
-0.20: # 2015-03-20-T15:10:00+0000
-- Fix a regression in 0.14. When the chunked encoding support was
-  introduced we accidentally stopped supporting "Content-Length: 0",
-  treat those responses as the zero-body again. This broke e.g. PUT
-  requests that would return no payload.
+0.21
 
-- Add support for 204 No Content responses. According to the HTTP
-  standard we must try to consume the body if there's no
-  Content-Length, but not if the server returns a 204 response, then
-  it MUST NOT include a body (see
-  http://tools.ietf.org/html/rfc2616#page-60).
+	- Released at 2015-05-22T15:26:23+0200
 
-  This re-adds support for e.g. 204 No Content response, in practice
-  this "worked" before 0.14, but only accidentally and other types of
-  responses wouldn't work.
+	- Fix "Too many CRLF" issue. Hijk has been always generating HTTP
+	  request with an extra CRLF at the end. While many HTTP servers are
+	  ignoring those, some treat it as errors. We now eliminate the extra
+	  CRLF at the end of every request.
+	  See also http://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html
 
-- We now handle our system calls returning EINTR.
+	- Handle better when select() is interrupted by signals.
 
-0.19: # 2015-01-10-T18:30:00+0000
-- Fix a major regression in 0.16. The introduction of "head_as_array"
-  completely broke the disconnection logic when the socket_cache was
-  enabled (which is the default). When talking to a webserver that
-  would disconnect us after N requests request N+1 would always fail
-  with a 0 byte response error.
+0.20
 
-  This issue was reported as RT #101424
-  (https://rt.cpan.org/Public/Bug/Display.html?id=101424)
+	- Released at 2015-03-20-T15:10:00+0000
+	- Fix a regression in 0.14. When the chunked encoding support was
+	  introduced we accidentally stopped supporting "Content-Length: 0",
+	  treat those responses as the zero-body again. This broke e.g. PUT
+	  requests that would return no payload.
 
-- Fix a minor regression in 0.16: The introduction of "head_as_array"
-  broke the "proto" part of the return value in a relatively obscure
-  edge case where we'd read the header & had no Content-Length and
-  couldn't read() anything.
+	- Add support for 204 No Content responses. According to the HTTP
+	  standard we must try to consume the body if there's no
+	  Content-Length, but not if the server returns a 204 response, then
+	  it MUST NOT include a body (see
+	  http://tools.ietf.org/html/rfc2616#page-60).
 
-- Fix an edge case in the Trailer support. It would only kick in if we
-  got the Transfer-Encoding header before the "Trailer" header, not
-  the other way around.
+	  This re-adds support for e.g. 204 No Content response, in practice
+	  this "worked" before 0.14, but only accidentally and other types of
+	  responses wouldn't work.
 
-0.18: # 2014-12-10T14:00:00+000
-- We now do the right thing on "method => 'HEAD'". I.e. ignore the
-  Content-Length parameter, previously we'd just hang trying to slurp
-  up the body.
-- Fix an edge case with some of the live tests leaving around a HTTP
-  server if they died, these don't run by default.
+	- We now handle our system calls returning EINTR.
 
-0.17: # 2014-08-31T18:30:00+000
-- Minor documentation changes, no functional changes.
-- The version number for the last release was incorrect in this
-  changelog, fixed in this release.
+0.19
 
-0.16: # 2014-08-31T00:10:00+000
-- Major Change: There are several new Hijk::Error::* constants for
-  common issues that happened during normal requests in the face of
-  regular exceptions out of the control of this library, such as
-  network blips.
+	- Released at 2015-01-10-T18:30:00+0000
+	- Fix a major regression in 0.16. The introduction of "head_as_array"
+	  completely broke the disconnection logic when the socket_cache was
+	  enabled (which is the default). When talking to a webserver that
+	  would disconnect us after N requests request N+1 would always fail
+	  with a 0 byte response error.
 
-  Existing code that checks $res->{error} should be
-  forwards-compatible with this change, but anything that was doing
-  e.g. regex checks against regular errors thrown by this library
-  should be updated to check the new Hijk::Error::* constants instead.
+	  This issue was reported as RT #101424
+	  (https://rt.cpan.org/Public/Bug/Display.html?id=101424)
 
-- It's now possible to specify "head_as_array" to get the returned
-  headers as an array (with potential duplicated headers), rather than
-  the default behavior of lossily returning them as a hash.
+	- Fix a minor regression in 0.16: The introduction of "head_as_array"
+	  broke the "proto" part of the return value in a relatively obscure
+	  edge case where we'd read the header & had no Content-Length and
+	  couldn't read() anything.
 
-- There's now a "read_length" option to control how much we
-  POSIX::read($fd, $buf, $read_length) at a time. We don't expect this
-  to be useful, it's mainly configurable on general principle so we
-  don't have arbitrary unconfigurable hardcoded constants in the
-  source.
+	- Fix an edge case in the Trailer support. It would only kick in if we
+	  got the Transfer-Encoding header before the "Trailer" header, not
+	  the other way around.
 
-0.15: # 2014-08-30T10:00:00+000
-- The new code to support chunked transfer encoding would return a
-  nonexisting Hijk::Error::* value of "0" when it encountered a read
-  timeout. This meant that not only was the error reporting broken,
-  but anything checking if there were errors via the simple idiom of
-  "if ($res->{error}) {...}" wouldn't properly report errors.
+0.18
 
-  We'll now correctly report these errors as
-  Hijk::Error::READ_TIMEOUT.
+	- Released at 2014-12-10T14:00:00+000
+	- We now do the right thing on "method => 'HEAD'". I.e. ignore the
+	  Content-Length parameter, previously we'd just hang trying to slurp
+	  up the body.
+	- Fix an edge case with some of the live tests leaving around a HTTP
+	  server if they died, these don't run by default.
 
-- Since there may still be other bugs like that in this new parsing
-  mode it's disabled by default, if you know you want to parse chunked
-  responses you have to pass parse_chunked => 1 for now. Usually you
-  probably just want to disable chunked encoding on the other end, see
-  the note about how to do that with nginx in the docs.
+0.17
 
-0.14: # 2014-08-29T15:40:36+0900
-- Start support chunked transfer encoding.
+	- Released at 2014-08-31T18:30:00+000
+	- Minor documentation changes, no functional changes.
+	- The version number for the last release was incorrect in this
+	  changelog, fixed in this release.
 
-0.13: # 2014-04-27T20:00:43+0200
-- Switch to use non-blocknig fd to avoid a rare deadlock situation
-  when select() is successful and the following read() blocks forever
-  because there are really nothing to read.
+0.16
 
-0.12: # 2014-01-31T18:20:00+0100
-- Instead of dying on e.g. "Bad arg length for
-  Socket::pack_sockaddr_in, length is 0, should be 4" when given a
-  host we can't resolve we'll now return a $res with the error value
-  set to Hijk::Error::CANNOT_RESOLVEif we can't gethostbyname() the
-  provided hostname. Makes it easier to handle DNS resolution
-  failures.
+	- Released at 2014-08-31T00:10:00+000
+	- Major Change: There are several new Hijk::Error::* constants for
+	  common issues that happened during normal requests in the face of
+	  regular exceptions out of the control of this library, such as
+	  network blips.
 
-0.11: # 2014-01-06T13:20:00+0100
-- Fixed broken HTTP header parsing for servers that didn't return the
-  entire header all at the same time, but in chunks.
-- We now return "proto" as well as "status" etc. in the response, so
-  you can see what the protocol the server was using to speak to
-  us. Also we pro-actively connections to servers that claim they're
-  speaking HTTP/1.0.
-- Document that what the socket_cache is keyed on, for anyone wanting
-  to implement a tied hash or whatever.
-- Fix a minor bug causing redundant work under "socket_cache => undef"
+	  Existing code that checks $res->{error} should be
+	  forwards-compatible with this change, but anything that was doing
+	  e.g. regex checks against regular errors thrown by this library
+	  should be updated to check the new Hijk::Error::* constants instead.
 
-0.10: # 2013-12-19T16:50:00+0100
-- We can now talk HTTP/1.0 an addition to HTTP/1.1, have a way to
-  disable the socket cache, and can specify connect and read timeouts
-  independently.
-- Fix a really nasty bug with mixings up requests after encountering a
-  timeout. See
-  http://lists.unbit.it/pipermail/uwsgi/2013-December/006802.html for
-  details.
-- Remove spurious requirenment on perl v5.14.2
-- First stab at https://github.com/gugod/Hijk/issues/3 we'll now
-  return an error key in the response with
-  Hijk::Error::{CONNECT_TIMEOUT,READ_TIMEOUT} instead of dying.
-- Nuked the Hijk::HTTP::XS support from the repo, we've decided it was
-  too complex for its own good.
-- Add support for an on_connect callback for seeing how long the
-  connect/reads take.
+	- It's now possible to specify "head_as_array" to get the returned
+	  headers as an array (with potential duplicated headers), rather than
+	  the default behavior of lossily returning them as a hash.
 
-0.09: # 2013-12-13T07:38:25+0100
-- KEEP CALM AND REMOVE FETCH OPTION
-- Hijk::request will use XS parser only if Hijk::HTTP::XS is loaded
+	- There's now a "read_length" option to control how much we
+	  POSIX::read($fd, $buf, $read_length) at a time. We don't expect this
+	  to be useful, it's mainly configurable on general principle so we
+	  don't have arbitrary unconfigurable hardcoded constants in the
+	  source.
 
-0.08: # 2013-12-12T20:10:00+0100
-- We only checked for undefined return codes from POSIX::read(), not
-  0, resulting in an infinite select/read loop when a server with
-  keep-alive enabled cut off our connection.
+0.15
 
-0.07: # 2013-12-09T12:50:00+0100
-- Skip the live connect timeout test by default, it will fail making
-  live connections on various firewalled/locked down hosts.
+	- Released at 2014-08-30T10:00:00+000
+	- The new code to support chunked transfer encoding would return a
+	  nonexisting Hijk::Error::* value of "0" when it encountered a read
+	  timeout. This meant that not only was the error reporting broken,
+	  but anything checking if there were errors via the simple idiom of
+	  "if ($res->{error}) {...}" wouldn't properly report errors.
 
-0.06: # 2013-12-09T12:20:00+0100
-- Declare missing test dependency on Test::Exception
-- Declare test dependency on Net::Ping 2.41
-- Various POD improvements describing more limitations in the API and
-  providing examples.
-- Don't unconditionally load the yet-to-be-released Hijk::HTTP::XS
-  module, instead provide a "fetch" option.
-- Shutdown and delete the cached connection in case of read error.
-- Handle syswrite() returning undef without spewing an uninitialized
-  comparison error
-- Various work on the test suite.
+	  We'll now correctly report these errors as
+	  Hijk::Error::READ_TIMEOUT.
 
-0.05: # 2013-12-04T22:33:31+0100
-- Properly invalidate connection cache when seeing 'Connection: close' in the response.
+	- Since there may still be other bugs like that in this new parsing
+	  mode it's disabled by default, if you know you want to parse chunked
+	  responses you have to pass parse_chunked => 1 for now. Usually you
+	  probably just want to disable chunked encoding on the other end, see
+	  the note about how to do that with nginx in the docs.
 
-0.04: # 2013-12-04T00:06:16+0100
-- Implement 'connect timeout' and 'read timeout'
+0.14
 
-0.02: # 2013-11-24T16:14:20+0100
-- Passthrug extra HTTP header with the 'head' request arg.
+	- Released at 2014-08-29T15:40:36+0900
+	- Start support chunked transfer encoding.
 
-0.01: # 2013-11-24T01:49:08+0100
-- Initial Release, with all wanted features are implemented.
+0.13
+
+	- Released at 2014-04-27T20:00:43+0200
+	- Switch to use non-blocknig fd to avoid a rare deadlock situation
+	  when select() is successful and the following read() blocks forever
+	  because there are really nothing to read.
+
+0.12
+
+	- Released at 2014-01-31T18:20:00+0100
+	- Instead of dying on e.g. "Bad arg length for
+	  Socket::pack_sockaddr_in, length is 0, should be 4" when given a
+	  host we can't resolve we'll now return a $res with the error value
+	  set to Hijk::Error::CANNOT_RESOLVEif we can't gethostbyname() the
+	  provided hostname. Makes it easier to handle DNS resolution
+	  failures.
+
+0.11
+
+	- Released at 2014-01-06T13:20:00+0100
+	- Fixed broken HTTP header parsing for servers that didn't return the
+	  entire header all at the same time, but in chunks.
+	- We now return "proto" as well as "status" etc. in the response, so
+	  you can see what the protocol the server was using to speak to
+	  us. Also we pro-actively connections to servers that claim they're
+	  speaking HTTP/1.0.
+	- Document that what the socket_cache is keyed on, for anyone wanting
+	  to implement a tied hash or whatever.
+	- Fix a minor bug causing redundant work under "socket_cache => undef"
+
+0.10
+
+	- Released at 2013-12-19T16:50:00+0100
+	- We can now talk HTTP/1.0 an addition to HTTP/1.1, have a way to
+	  disable the socket cache, and can specify connect and read timeouts
+	  independently.
+	- Fix a really nasty bug with mixings up requests after encountering a
+	  timeout. See
+	  http://lists.unbit.it/pipermail/uwsgi/2013-December/006802.html for
+	  details.
+	- Remove spurious requirenment on perl v5.14.2
+	- First stab at https://github.com/gugod/Hijk/issues/3 we'll now
+	  return an error key in the response with
+	  Hijk::Error::{CONNECT_TIMEOUT,READ_TIMEOUT} instead of dying.
+	- Nuked the Hijk::HTTP::XS support from the repo, we've decided it was
+	  too complex for its own good.
+	- Add support for an on_connect callback for seeing how long the
+	  connect/reads take.
+
+0.09
+
+	- Released at 2013-12-13T07:38:25+0100
+	- KEEP CALM AND REMOVE FETCH OPTION
+	- Hijk::request will use XS parser only if Hijk::HTTP::XS is loaded
+
+0.08
+
+	- Released at 2013-12-12T20:10:00+0100
+	- We only checked for undefined return codes from POSIX::read(), not
+	  0, resulting in an infinite select/read loop when a server with
+	  keep-alive enabled cut off our connection.
+
+0.07
+
+	- Released at 2013-12-09T12:50:00+0100
+	- Skip the live connect timeout test by default, it will fail making
+	  live connections on various firewalled/locked down hosts.
+
+0.06
+
+	- Released at 2013-12-09T12:20:00+0100
+	- Declare missing test dependency on Test::Exception
+	- Declare test dependency on Net::Ping 2.41
+	- Various POD improvements describing more limitations in the API and
+	  providing examples.
+	- Don't unconditionally load the yet-to-be-released Hijk::HTTP::XS
+	  module, instead provide a "fetch" option.
+	- Shutdown and delete the cached connection in case of read error.
+	- Handle syswrite() returning undef without spewing an uninitialized
+	  comparison error
+	- Various work on the test suite.
+
+0.05
+
+	- Released at 2013-12-04T22:33:31+0100
+	- Properly invalidate connection cache when seeing 'Connection: close' in the response.
+
+0.04
+
+	- Released at 2013-12-04T00:06:16+0100
+	- Implement 'connect timeout' and 'read timeout'
+
+0.02
+
+	- Released at 2013-11-24T16:14:20+0100
+	- Passthrug extra HTTP header with the 'head' request arg.
+
+0.01
+
+	- Released at 2013-11-24T01:49:08+0100
+	- Initial Release, with all wanted features are implemented.
 
