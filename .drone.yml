@@ -26,6 +26,7 @@ steps:
       - Build
     commands:
       - echo *.tar.gz
+      - cpanm --notest -q *.tar.gz
       - cpanm -q *.tar.gz
 
   - << : *installation
